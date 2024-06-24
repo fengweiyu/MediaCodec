@@ -1,0 +1,14 @@
+prefix=/mnt/d/linuxCode/third/lib/linux/x86/ffmpeg-7.0.1
+exec_prefix=${prefix}
+libdir=/mnt/d/linuxCode/third/lib/linux/x86/ffmpeg-7.0.1/lib
+includedir=/mnt/d/linuxCode/third/lib/linux/x86/ffmpeg-7.0.1/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 61.3.100
+Requires: 
+Requires.private: libswresample >= 5.1.100, libavutil >= 59.8.100
+Conflicts:
+Libs: -L${libdir}  -lavcodec 
+Libs.private: -pthread -lm -L/mnt/d/linuxCode/third/lib/linux/x86/x264-stable/lib -lx264 -lpthread -lm -ldl -L/mnt/d/linuxCode/third/lib/linux/x86/x265_2.7/lib -lx265 -lstdc++ -lm -lgcc_s -lgcc -lrt -ldl -lz
+Cflags: -I${includedir}

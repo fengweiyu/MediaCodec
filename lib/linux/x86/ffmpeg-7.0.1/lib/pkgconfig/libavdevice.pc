@@ -1,0 +1,14 @@
+prefix=/mnt/d/linuxCode/third/lib/linux/x86/ffmpeg-7.0.1
+exec_prefix=${prefix}
+libdir=/mnt/d/linuxCode/third/lib/linux/x86/ffmpeg-7.0.1/lib
+includedir=/mnt/d/linuxCode/third/lib/linux/x86/ffmpeg-7.0.1/include
+
+Name: libavdevice
+Description: FFmpeg device handling library
+Version: 61.1.100
+Requires: 
+Requires.private: libavfilter >= 10.1.100, libswscale >= 8.1.100, libpostproc >= 58.1.100, libavformat >= 61.1.100, libavcodec >= 61.3.100, libswresample >= 5.1.100, libavutil >= 59.8.100
+Conflicts:
+Libs: -L${libdir}  -lavdevice 
+Libs.private: -lm
+Cflags: -I${includedir}
