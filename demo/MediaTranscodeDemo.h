@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2020-2025 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       HlsServerDemo.h
+* File Module           :       MediaTranscodeDemo.h
 * Description           : 	
 * Created               :       2020.01.13.
 * Author                :       Yu Weifeng
@@ -9,40 +9,31 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#ifndef HLS_SERVER_DEMO_H
-#define HLS_SERVER_DEMO_H
+#ifndef MEDIA_TRANSCODE_DEMO_H
+#define MEDIA_TRANSCODE_DEMO_H
 
-#include <mutex>
-#include <string>
-#include <list>
-#include <map>
-#include "HlsServerIO.h"
+#include "MediaHandle.h"
+#include "MediaTranscodeCom.h"
 
-using std::map;
-using std::string;
-using std::list;
-using std::mutex;
 
 /*****************************************************************************
--Class			: WebRtcServer
+-Class			: MediaTranscodeDemo
 -Description	: 
 * Modify Date	  Version		 Author 		  Modification
 * -----------------------------------------------
 * 2019/09/21	  V1.0.0		 Yu Weifeng 	  Created
 ******************************************************************************/
-class HlsServerDemo : public TcpServer
+class MediaTranscodeDemo
 {
 public:
-	HlsServerDemo(int i_iServerPort);
-	virtual ~HlsServerDemo();
-    int Proc();
+	MediaTranscodeDemo();
+	virtual ~MediaTranscodeDemo();
+    int proc(const char * i_strSrcFileName,const char * i_strDstFileName);
     
 private:
-    int CheckMapServerIO();
-    int AddMapServerIO(HlsServerIO * i_pHlsServerIO,int i_iClientSocketFd);
+    int MediaFrameToCodecFrame(T_MediaFrameInfo * i_ptMediaFrame,T_CodecFrame * i_ptCodecFrame);
+    int CreateCodecFrame(const char * i_strDstFileName,unsigned char *pbCodecBuf,int iCodecBufMaxLen,T_CodecFrame * i_ptCodecFrame);
     
-    map<int, HlsServerIO *>  m_HlsServerIOMap;
-    mutex m_MapMtx;
 };
 
 #endif

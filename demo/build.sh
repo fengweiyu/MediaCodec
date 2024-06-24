@@ -26,7 +26,7 @@ function GenerateCmakeFile()
 }
 function BuildExe()
 {
-    echo -e "Start building HlsServer..."
+    echo -e "Start building MediaTranscode..."
     OutputPath="./build"
     if [ -e "$OutputPath" ]; then
         rm $OutputPath -rf
@@ -68,7 +68,7 @@ function CopyExe()
     cd $1
 
     
-    cp $CurPwd/build/HlsServer .
+    cp $CurPwd/build/MediaTranscode .
 
 #由于对外头文件又依赖内部头文件，所以要拷贝，暂时这么处理后续优化   
 #    cp $CurPwd/*.h .
@@ -78,7 +78,7 @@ if [ $# == 0 ]; then
     PrintUsage
     exit -1
 else
-    cd net
+    cd media
     sh build.sh $1 $2
     if [ $? -ne 0 ]; then
         exit -1

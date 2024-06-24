@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "HlsServerDemo.h"
+#include "MediaTranscodeDemo.h"
 
 static void PrintUsage(char *i_strProcName);
 
@@ -29,22 +29,14 @@ static void PrintUsage(char *i_strProcName);
 ******************************************************************************/
 int main(int argc, char* argv[]) 
 {
-    int iRet = -1;
-    
-    int dwServerPort=9212;
-    
-    if(argc !=2)
+    MediaTranscodeDemo oMediaTranscodeDemo;
+
+    if(argc !=3)
     {
         PrintUsage(argv[0]);
+        return oMediaTranscodeDemo.proc("demo.h264","demo.h265");
     }
-    else
-    {
-        dwServerPort=atoi(argv[1]);
-    }
-    HlsServerDemo *pHlsServerDemo = new HlsServerDemo(dwServerPort);
-    iRet=pHlsServerDemo->Proc();//×èÈû
-    
-    return iRet;
+    return oMediaTranscodeDemo.proc(argv[1],argv[2]);
 }
 /*****************************************************************************
 -Fuction        : PrintUsage
@@ -58,7 +50,8 @@ int main(int argc, char* argv[])
 ******************************************************************************/
 static void PrintUsage(char *i_strProcName)
 {
-    printf("Usage: %s ServerPort \r\n",i_strProcName);
-    printf("run default args: %s 9212 \r\n",i_strProcName);
+    printf("Usage: %s inputFile outputFile\r\n",i_strProcName);
+    //printf("eg: %s 9112 77.72.169.210 3478\r\n",i_strProcName);
+    printf("run default args: %s demo.h264 demo.h265\r\n",i_strProcName);
 }
 
