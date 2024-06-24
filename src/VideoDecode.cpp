@@ -10,7 +10,6 @@
 * History               : 	
 ******************************************************************************/
 #include "VideoDecode.h"
-#include "MediaTranscodeCom.h"
 #include <regex>
 #include <string>
 #include <stdlib.h>
@@ -86,7 +85,7 @@ VideoDecode::~VideoDecode()
 int VideoDecode::Init(E_CodecType i_eCodecType)
 {
     int iRet = -1;
-    AVCodec         *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
+    AVCodec * ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
     int iCodecID=AV_CODEC_ID_NONE;
     
     m_ptPacket = av_packet_alloc();
@@ -96,7 +95,7 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
         return iRet;
     }
     iCodecID=CodecTypeToAvCodecId(i_eCodecType);
-    ptCodec = avcodec_find_decoder(iCodecID);//查找解码器
+    ptCodec = (AVCodec *)avcodec_find_decoder((enum AVCodecID)iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
         CODEC_LOGE("NULL==ptCodec err \r\n");
@@ -153,7 +152,7 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     //if (avcodec_open2(m_ptCodecContext, ptCodec, &ptOpts) < 0)
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
-        CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name(iCodecID));
+        CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
         return iRet;
     }
     
@@ -246,8 +245,8 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
             }
             /* the picture is allocated by the decoder. no need to
                free it */
-            CODEC_LOGD("dec frame %d,frame->data[0]%d, frame->linesize[0]%d,frame->width%d, frame->height%d \r\n", 
-            m_ptCodecContext->frame_number,m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
+            CODEC_LOGD("dec frame ,frame->data[0]%d, frame->linesize[0]%d,frame->width%d, frame->height%d \r\n", 
+            /*m_ptCodecContext->frame_number,*/m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
         }
     }
     //av_frame_move_ref(o_ptAVFrame,m_ptFrame);//后续下面的操作可以优化为这一个

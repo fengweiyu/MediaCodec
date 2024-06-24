@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoEncode.cpp
+* File Module           :       AudioEncode.cpp
 * Description           : 	   
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,7 +9,7 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#include "VideoEncode.h"
+#include "AudioEncode.h"
 #include "MediaTranscodeCom.h"
 #include <regex>
 #include <string>
@@ -27,7 +27,7 @@ using std::regex;
 
 
 /*****************************************************************************
--Fuction        : VideoEncode
+-Fuction        : AudioEncode
 -Description    : 
 -Input          : 
 -Output         : 
@@ -36,7 +36,7 @@ using std::regex;
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoEncode::VideoEncode()
+AudioEncode::AudioEncode()
 {
     m_ptPacket=NULL;
     m_ptCodecContext = NULL;
@@ -51,7 +51,7 @@ VideoEncode::VideoEncode()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoEncode::~VideoEncode()
+AudioEncode::~AudioEncode()
 {
     if(NULL!=m_ptCodecContext)
     {
@@ -75,7 +75,7 @@ VideoEncode::~VideoEncode()
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int i_iHeight)
+int AudioEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int i_iHeight)
 {
     int iRet = -1;
     AVCodec         *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
@@ -98,7 +98,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
     // Encoder Setting
     //m_ptCodecContext->bit_rate = 400000;/* put sample parameters */
     //m_ptCodecContext->codec_id = iCodecID;
-    //m_ptCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
+    //m_ptCodecContext->codec_type = AVMEDIA_TYPE_Audio;
     m_ptCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
     m_ptCodecContext->width = i_iWidth;/* resolution must be a multiple of two */
     m_ptCodecContext->height = i_iHeight;
@@ -186,7 +186,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType)
+int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType)
 {
     int iRet = -1;
     int iFrameRate = 0;
@@ -236,7 +236,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
     }
     if (m_ptPacket->size > 0 && AV_PKT_FLAG_CORRUPT != m_ptPacket->flags) 
     {
-        *o_iFrameType=m_ptPacket->flags == AV_PKT_FLAG_KEY ? CODEC_FRAME_TYPE_VIDEO_I_FRAME : CODEC_FRAME_TYPE_VIDEO_P_FRAME;
+        *o_iFrameType=m_ptPacket->flags == AV_PKT_FLAG_KEY ? CODEC_FRAME_TYPE_Audio_I_FRAME : CODEC_FRAME_TYPE_Audio_P_FRAME;
         if (m_ptCodecContext->framerate.den > 0)
         {
             iFrameRate = m_ptCodecContext->framerate.num / m_ptCodecContext->framerate.den;
@@ -262,7 +262,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoEncode::CodecTypeToAvCodecId(E_CodecType eCodecType)
+int AudioEncode::CodecTypeToAvCodecId(E_CodecType eCodecType)
 {
     switch (eCodecType) 
     {

@@ -100,7 +100,7 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         return iRet;
     }
     
-    iRet=m_pVideoDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,,i_pSrcFrame->ddwPTS,,i_pSrcFrame->ddwDTS,ptAVFrame);
+    iRet=m_pVideoDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,i_pSrcFrame->ddwPTS,i_pSrcFrame->ddwDTS,ptAVFrame);
     if(iRet<0)
     {
         CODEC_LOGE("m_pVideoDecode->Decode err \r\n");
@@ -119,7 +119,7 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         AVCodecContext *ptCodecContext=NULL;
         iRet=m_pVideoDecode->GetCodecContext(&ptCodecContext);
         time_t rawtime = time(NULL);
-        struct tm *timeinfo = localtime(&rawtime); // 将时间戳转换为本地时间
+        struct tm *timeinfo = localtime(&rawtime); // ?????????????????
         snprintf(strTemp,sizeof(strTemp),"drawtext=fontfile=msyhbd.ttc:fontcolor=red:fontsize=25:x=50:y=20:text='%s'",asctime(timeinfo));
         iRet=m_pVideoRawHandle->Init(ptCodecContext,strTemp);
     }

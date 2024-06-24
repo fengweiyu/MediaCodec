@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoDecode.h
+* File Module           :       AudioDecode.h
 * Description           : 	
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,24 +9,24 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#ifndef VIDEO_DECODE_H
-#define VIDEO_DECODE_H
+#ifndef AUDIO_DECODE_H
+#define AUDIO_DECODE_H
 
 #include "libavcodec/avcodec.h"
 
 
 /*****************************************************************************
--Class          : VideoDecode
--Description    : VideoDecode
+-Class          : AudioDecode
+-Description    : AudioDecode
 * Modify Date     Version             Author           Modification
 * -----------------------------------------------
 * 2020/01/11      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-class VideoDecode
+class AudioDecode
 {
 public:
-	VideoDecode();
-	virtual ~VideoDecode();
+	AudioDecode();
+	virtual ~AudioDecode();
     int Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen,int64_t i_ddwPTS,int64_t i_ddwDTS,AVFrame *o_ptAVFrame);
     int Init(E_CodecType i_eCodecType);
     int GetCodecContext(AVCodecContext **o_ptCodecContext);

@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoDecode.cpp
+* File Module           :       AudioDecode.cpp
 * Description           : 	    
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,7 +9,7 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#include "VideoDecode.h"
+#include "AudioDecode.h"
 #include "MediaTranscodeCom.h"
 #include <regex>
 #include <string>
@@ -24,7 +24,7 @@ using std::regex;
 
 
 /*****************************************************************************
--Fuction        : VideoDecode
+-Fuction        : AudioDecode
 -Description    : 
 -Input          : 
 -Output         : 
@@ -33,7 +33,7 @@ using std::regex;
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoDecode::VideoDecode()
+AudioDecode::AudioDecode()
 {
     m_ptPacket=NULL;
     m_ptParser = NULL;
@@ -41,8 +41,8 @@ VideoDecode::VideoDecode()
     m_ptFrame = NULL;
 }
 /*****************************************************************************
--Fuction        : ~~VideoDecode
--Description    : ~~VideoDecode
+-Fuction        : ~~AudioDecode
+-Description    : ~~AudioDecode
 -Input          : 
 -Output         : 
 -Return         : 
@@ -50,7 +50,7 @@ VideoDecode::VideoDecode()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoDecode::~VideoDecode()
+AudioDecode::~AudioDecode()
 {
     if(NULL!=m_ptParser)
     {
@@ -83,7 +83,7 @@ VideoDecode::~VideoDecode()
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoDecode::Init(E_CodecType i_eCodecType)
+int AudioDecode::Init(E_CodecType i_eCodecType)
 {
     int iRet = -1;
     AVCodec         *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
@@ -116,7 +116,7 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     }
     // Decoder Setting
     //m_ptCodecContext->codec_id = iCodecID;
-    //m_ptCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
+    //m_ptCodecContext->codec_type = AVMEDIA_TYPE_Audio;
     //m_ptCodecContext->pix_fmt = AV_PIX_FMT_NONE;
     //m_ptCodecContext->width = i_width_;
     //m_ptCodecContext->height = i_height_;
@@ -176,7 +176,7 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen,int64_t i_ddwPTS,int64_t i_ddwDTS,AVFrame *o_ptAVFrame)
+int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen,int64_t i_ddwPTS,int64_t i_ddwDTS,AVFrame *o_ptAVFrame)
 {
     int iRet = -1;
     unsigned char *pbFrameData=NULL;
@@ -277,7 +277,7 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoDecode::GetCodecContext(AVCodecContext **o_ptCodecContext)
+int AudioDecode::GetCodecContext(AVCodecContext **o_ptCodecContext)
 {
     int iRet = -1;
 
@@ -300,7 +300,7 @@ int VideoDecode::GetCodecContext(AVCodecContext **o_ptCodecContext)
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoDecode::CodecTypeToAvCodecId(E_CodecType eCodecType)
+int AudioDecode::CodecTypeToAvCodecId(E_CodecType eCodecType)
 {
     switch (eCodecType) 
     {

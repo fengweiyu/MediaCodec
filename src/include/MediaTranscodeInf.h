@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2020-2025 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       HlsServerInf.h
+* File Module           :       MediaTranscodeInf.h
 * Description           : 	
 * Created               :       2020.01.13.
 * Author                :       Yu Weifeng
@@ -9,25 +9,25 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#ifndef HLS_SERVER_INF_H
-#define HLS_SERVER_INF_H
+#ifndef MEDIA_TRANSCODE_INF_H
+#define MEDIA_TRANSCODE_INF_H
 
-
+#include "MediaTranscodeCom.h"
 
 
 /*****************************************************************************
--Class          : HlsServerInf
--Description    : HlsServerInf
+-Class          : MediaTranscodeInf
+-Description    : MediaTranscodeInf
 * Modify Date     Version             Author           Modification
 * -----------------------------------------------
 * 2020/01/11      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-class HlsServerInf
+class MediaTranscodeInf
 {
 public:
-	HlsServerInf();
-	virtual ~HlsServerInf();
-    int HandleHttpReq(const char * i_strReq,char *o_strRes,int i_iResMaxLen);//return ResLen,<0 err
+	MediaTranscodeInf();
+	virtual ~MediaTranscodeInf();
+    int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
     void * m_pHandle;
 };

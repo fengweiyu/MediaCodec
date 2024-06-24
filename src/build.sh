@@ -74,23 +74,40 @@ function CopyLib()
     fi
     
     cd lib
-    cp $CurPwd/build/lib/libHlsServer.a .
+    cp $CurPwd/build/lib/libMediaTranscode.a .
 
     cp $CurPwd/include . -rf
 
 
+
+    cd $1
+    rm ./ThirdLib -rf
+    mkdir ThirdLib
+    cd ThirdLib
+    mkdir ffmpeg
+    mkdir ffmpeg/lib
+#    mkdir ffmpeg/include
+    mkdir x264
+    mkdir x264/lib
+#    mkdir x264/include
+    mkdir x265
+    mkdir x265/lib
+#    mkdir x265/include
+    cp $CurPwd/../lib/linux/$2/ffmpeg-7.0.1/lib/*.a $1/ThirdLib/ffmpeg/lib -rf
+    cp $CurPwd/../lib/linux/$2/ffmpeg-7.0.1/include $1/ThirdLib/ffmpeg -rf
+    cp $CurPwd/../lib/linux/$2/x264-stable/lib/*.a $1/ThirdLib/x264/lib -rf
+    cp $CurPwd/../lib/linux/$2/x264-stable/include $1/ThirdLib/x264 -rf
+    cp $CurPwd/../lib/linux/$2/x265_2.7/lib/*.a $1/ThirdLib/x265/lib -rf
+    cp $CurPwd/../lib/linux/$2/x265_2.7/include $1/ThirdLib/x265 -rf
+
+    cd $CurPwd
 }
 
 if [ $# == 0 ]; then
     PrintUsage
     exit -1
 else
-    cd ThirdSrc
-    sh build.sh $1 $2
-    if [ $? -ne 0 ]; then
-        exit -1
-    fi
-    cd ..
+
     
 #   GenerateCmakeFile $1
     BuildLib $1

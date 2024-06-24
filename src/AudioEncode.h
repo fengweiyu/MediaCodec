@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoEncode.h
+* File Module           :       AudioEncode.h
 * Description           : 	
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,25 +9,25 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#ifndef VIDEO_ENCODE_H
-#define VIDEO_ENCODE_H
+#ifndef AUDIO_ENCODE_H
+#define AUDIO_ENCODE_H
 
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
 
 
 /*****************************************************************************
--Class          : VideoEncode
--Description    : VideoEncode
+-Class          : AudioEncode
+-Description    : AudioEncode
 * Modify Date     Version             Author           Modification
 * -----------------------------------------------
 * 2023/01/11      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-class VideoEncode
+class AudioEncode
 {
 public:
-	VideoEncode();
-	virtual ~VideoEncode();
+	AudioEncode();
+	virtual ~AudioEncode();
     int Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType);
     int Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int i_iHeight);
 private:

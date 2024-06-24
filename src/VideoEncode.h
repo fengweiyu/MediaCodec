@@ -12,8 +12,11 @@
 #ifndef VIDEO_ENCODE_H
 #define VIDEO_ENCODE_H
 
+#include "MediaTranscodeCom.h"
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
+}
 
 
 /*****************************************************************************

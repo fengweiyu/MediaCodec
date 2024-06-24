@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoRawHandle.h
+* File Module           :       AudioRawHandle.h
 * Description           : 	
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,8 +9,8 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#ifndef VIDEO_RAW_HANDLE_H
-#define VIDEO_RAW_HANDLE_H
+#ifndef AUDIO_RAW_HANDLE_H
+#define AUDIO_RAW_HANDLE_H
 
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
@@ -32,17 +32,17 @@ using std::thread;
 
 
 /*****************************************************************************
--Class          : VideoRawHandle
--Description    : VideoRawHandle
-* Modify Date     VideoRawHandleAuthor           Modification
+-Class          : AudioRawHandle
+-Description    : AudioRawHandle
+* Modify Date     AudioRawHandleAuthor           Modification
 * -----------------------------------------------
 * 2022/01/11      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-class VideoRawHandle
+class AudioRawHandle
 {
 public:
-	VideoRawHandle();
-	virtual ~VideoRawHandle();
+	AudioRawHandle();
+	virtual ~AudioRawHandle();
     int Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersDescr);
     int RawHandle(AVFrame *m_ptAVFrame);
     

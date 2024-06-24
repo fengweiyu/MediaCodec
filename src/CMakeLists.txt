@@ -19,17 +19,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(src_list
     MediaTranscodeInf.cpp
 	MediaTranscode.cpp
-    AudioDecode.cpp
-    AudioRawHandle.cpp
-    AudioEncode.cpp
-    AudioTransform.cpp
+#    AudioDecode.cpp
+#    AudioRawHandle.cpp
+#    AudioEncode.cpp
+#    AudioTransform.cpp
     VideoDecode.cpp
     VideoRawHandle.cpp
     VideoEncode.cpp
     VideoTransform.cpp
 	)		
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}
-	${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/../lib/linux/x86/ffmpeg-7.0.1/include
 	)
 ADD_LIBRARY(MediaTranscode_static STATIC ${src_list})
 SET_TARGET_PROPERTIES(MediaTranscode_static PROPERTIES OUTPUT_NAME MediaTranscode)

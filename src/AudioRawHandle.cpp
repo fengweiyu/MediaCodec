@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoRawHandle.cpp
+* File Module           :       AudioRawHandle.cpp
 * Description           : 	
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,7 +9,7 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#include "VideoRawHandle.h"
+#include "AudioRawHandle.h"
 #include "MediaTranscodeCom.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@
 
 
 /*****************************************************************************
--Fuction        : VideoRawHandle
+-Fuction        : AudioRawHandle
 -Description    : 
 -Input          : 
 -Output         : 
@@ -30,7 +30,7 @@
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoRawHandle::VideoRawHandle()
+AudioRawHandle::AudioRawHandle()
 {
     m_ptFiltFrame = NULL;
     m_ptBufferSrcCtx = NULL;//
@@ -38,8 +38,8 @@ VideoRawHandle::VideoRawHandle()
     m_ptFilterGraph = NULL;//
 }
 /*****************************************************************************
--Fuction        : ~VideoRawHandle
--Description    : ~VideoRawHandle
+-Fuction        : ~AudioRawHandle
+-Description    : ~AudioRawHandle
 -Input          : 
 -Output         : 
 -Return         : 
@@ -47,7 +47,7 @@ VideoRawHandle::VideoRawHandle()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoRawHandle::~VideoRawHandle()
+AudioRawHandle::~AudioRawHandle()
 {
     if(NULL!=m_ptFilterGraph)
     {
@@ -75,7 +75,7 @@ std::string filterStr(strTemp);
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoRawHandle::Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersDescr)
+int AudioRawHandle::Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersDescr)
 {
     int iRet = -1;
     //AVFilterGraph *filter_graph;
@@ -104,10 +104,10 @@ int VideoRawHandle::Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersD
         return iRet;
     }
     
-    /* buffer video source: the decoded frames from the decoder will be inserted here. */
+    /* buffer Audio source: the decoded frames from the decoder will be inserted here. */
     char args[512];
     snprintf(args, sizeof(args),
-        "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+        "Audio_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
         i_ptDecodeCtx->width, i_ptDecodeCtx->height, i_ptDecodeCtx->pix_fmt,
         1, 1000,
         i_ptDecodeCtx->sample_aspect_ratio.num,
@@ -120,7 +120,7 @@ int VideoRawHandle::Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersD
             CODEC_LOGE( "Cannot create buffer source\n");
             break;
         }
-        /* buffer video sink: to terminate the filter chain. */
+        /* buffer Audio sink: to terminate the filter chain. */
         iRet = avfilter_graph_create_filter(&m_ptBufferSinkCtx, buffersink, "out",NULL, NULL, m_ptFilterGraph);
         if (iRet < 0) 
         {
@@ -195,7 +195,7 @@ int VideoRawHandle::Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersD
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoRawHandle::RawHandle(AVFrame *m_ptAVFrame)
+int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame)
 {
     int iRet = -1;
     unsigned char *pbFrameData=NULL;

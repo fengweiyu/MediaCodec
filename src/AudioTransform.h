@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoTransform.h
+* File Module           :       AudioTransform.h
 * Description           : 	
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,12 +9,12 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#ifndef VIDEO_TRANSFORM_H
-#define VIDEO_TRANSFORM_H
+#ifndef AUDIO_TRANSFORM_H
+#define AUDIO_TRANSFORM_H
 
-#include "VideoDecode.h"
-#include "VideoRawHandle.h"
-#include "VideoEncode.h"
+#include "AudioDecode.h"
+#include "AudioRawHandle.h"
+#include "AudioEncode.h"
 #include <thread>
 #include <mutex>
 #include <string>
@@ -30,23 +30,23 @@ using std::thread;
 
 
 /*****************************************************************************
--Class          : VideoTransform
--Description    : VideoTransform
+-Class          : AudioTransform
+-Description    : AudioTransform
 * Modify Date     Version             Author           Modification
 * -----------------------------------------------
 * 2022/01/11      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-class VideoTransform
+class AudioTransform
 {
 public:
-	VideoTransform();
-	virtual ~VideoTransform();
+	AudioTransform();
+	virtual ~AudioTransform();
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
 
-	VideoDecode *m_pVideoDecode;
-	VideoEncode *m_pVideoEncode;
-	VideoRawHandle *m_pVideoRawHandle;
+	AudioDecode *m_pAudioDecode;
+	AudioEncode *m_pAudioEncode;
+	AudioRawHandle *m_pAudioRawHandle;
 };
 
 

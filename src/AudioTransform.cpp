@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       VideoTransform.cpp
+* File Module           :       AudioTransform.cpp
 * Description           : 	
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
@@ -9,7 +9,7 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#include "VideoTransform.h"
+#include "AudioTransform.h"
 #include "MediaTranscodeCom.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@
 
 
 /*****************************************************************************
--Fuction        : VideoTransform
+-Fuction        : AudioTransform
 -Description    : 
 -Input          : 
 -Output         : 
@@ -30,16 +30,16 @@
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoTransform::VideoTransform()
+AudioTransform::AudioTransform()
 {
-    m_pVideoDecode = NULL;
-    m_pVideoRawHandle = NULL;
-    m_pVideoEncode = NULL;
+    m_pAudioDecode = NULL;
+    m_pAudioRawHandle = NULL;
+    m_pAudioEncode = NULL;
 
 }
 /*****************************************************************************
--Fuction        : ~VideoTransform
--Description    : ~VideoTransform
+-Fuction        : ~AudioTransform
+-Description    : ~AudioTransform
 -Input          : 
 -Output         : 
 -Return         : 
@@ -47,22 +47,22 @@ VideoTransform::VideoTransform()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-VideoTransform::~VideoTransform()
+AudioTransform::~AudioTransform()
 {
-    if(NULL!= m_pVideoDecode)
+    if(NULL!= m_pAudioDecode)
     {
-        delete m_pVideoDecode;
-        m_pVideoDecode = NULL;
+        delete m_pAudioDecode;
+        m_pAudioDecode = NULL;
     }
-    if(NULL!= m_pVideoRawHandle)
+    if(NULL!= m_pAudioRawHandle)
     {
-        delete m_pVideoRawHandle;
-        m_pVideoRawHandle = NULL;
+        delete m_pAudioRawHandle;
+        m_pAudioRawHandle = NULL;
     }
-    if(NULL!= m_pVideoEncode)
+    if(NULL!= m_pAudioEncode)
     {
-        delete m_pVideoEncode;
-        m_pVideoEncode = NULL;
+        delete m_pAudioEncode;
+        m_pAudioEncode = NULL;
     }
     
 }
@@ -77,21 +77,21 @@ VideoTransform::~VideoTransform()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
+int AudioTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
 {
     int iRet = -1;
     AVFrame * ptAVFrame=NULL;
     char strTemp[512] = { 0 };
 
-    if(NULL== m_pVideoDecode)
+    if(NULL== m_pAudioDecode)
     {
-        m_pVideoDecode = new VideoDecode();
-        if(NULL==m_pVideoDecode)
+        m_pAudioDecode = new AudioDecode();
+        if(NULL==m_pAudioDecode)
         {
-            CODEC_LOGE("NULL==m_pVideoDecode err \r\n");
+            CODEC_LOGE("NULL==m_pAudioDecode err \r\n");
             return iRet;
         }
-        iRet=m_pVideoDecode->Init(i_pSrcFrame->eEncType);
+        iRet=m_pAudioDecode->Init(i_pSrcFrame->eEncType);
     }
     ptAVFrame = av_frame_alloc();
     if(NULL==ptAVFrame)
@@ -100,51 +100,51 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         return iRet;
     }
     
-    iRet=m_pVideoDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,,i_pSrcFrame->ddwPTS,,i_pSrcFrame->ddwDTS,ptAVFrame);
+    iRet=m_pAudioDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,,i_pSrcFrame->ddwPTS,,i_pSrcFrame->ddwDTS,ptAVFrame);
     if(iRet<0)
     {
-        CODEC_LOGE("m_pVideoDecode->Decode err \r\n");
+        CODEC_LOGE("m_pAudioDecode->Decode err \r\n");
         return iRet;
     }
 
 
-    if(NULL== m_pVideoRawHandle)
+    if(NULL== m_pAudioRawHandle)
     {
-        m_pVideoRawHandle = new VideoRawHandle();
-        if(NULL==m_pVideoRawHandle)
+        m_pAudioRawHandle = new AudioRawHandle();
+        if(NULL==m_pAudioRawHandle)
         {
-            CODEC_LOGE("NULL==m_pVideoRawHandle err \r\n");
+            CODEC_LOGE("NULL==m_pAudioRawHandle err \r\n");
             return iRet;
         }
         AVCodecContext *ptCodecContext=NULL;
-        iRet=m_pVideoDecode->GetCodecContext(&ptCodecContext);
+        iRet=m_pAudioDecode->GetCodecContext(&ptCodecContext);
         time_t rawtime = time(NULL);
-        struct tm *timeinfo = localtime(&rawtime); // 将时间戳转换为本地时间
+        struct tm *timeinfo = localtime(&rawtime); // ?????????????????
         snprintf(strTemp,sizeof(strTemp),"drawtext=fontfile=msyhbd.ttc:fontcolor=red:fontsize=25:x=50:y=20:text='%s'",asctime(timeinfo));
-        iRet=m_pVideoRawHandle->Init(ptCodecContext,strTemp);
+        iRet=m_pAudioRawHandle->Init(ptCodecContext,strTemp);
     }
-    iRet=m_pVideoRawHandle->RawHandle(ptAVFrame);
+    iRet=m_pAudioRawHandle->RawHandle(ptAVFrame);
     if(iRet<0)
     {
-        CODEC_LOGE("m_pVideoRawHandle->RawHandle err \r\n");
+        CODEC_LOGE("m_pAudioRawHandle->RawHandle err \r\n");
         return iRet;
     }
 
 
-    if(NULL== m_pVideoEncode)
+    if(NULL== m_pAudioEncode)
     {
-        m_pVideoEncode = new VideoEncode();
-        if(NULL==m_pVideoEncode)
+        m_pAudioEncode = new AudioEncode();
+        if(NULL==m_pAudioEncode)
         {
-            CODEC_LOGE("NULL==m_pVideoEncode err \r\n");
+            CODEC_LOGE("NULL==m_pAudioEncode err \r\n");
             return iRet;
         }
-        iRet=m_pVideoEncode->Init(o_pDstFrame->eEncType,o_pDstFrame->iFrameRate,(int)o_pDstFrame->dwWidth,(int)o_pDstFrame->dwHeight);
+        iRet=m_pAudioEncode->Init(o_pDstFrame->eEncType,o_pDstFrame->iFrameRate,(int)o_pDstFrame->dwWidth,(int)o_pDstFrame->dwHeight);
     }
-    iRet=m_pVideoEncode->Encode(ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,&o_pDstFrame->iFrameRate,&o_pDstFrame->eFrameType);
+    iRet=m_pAudioEncode->Encode(ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,&o_pDstFrame->iFrameRate,&o_pDstFrame->eFrameType);
     if(iRet<=0)
     {
-        CODEC_LOGE("m_pVideoEncode->Encode err \r\n");
+        CODEC_LOGE("m_pAudioEncode->Encode err \r\n");
         return -1;
     }
     o_pDstFrame->iFrameBufLen=iRet;

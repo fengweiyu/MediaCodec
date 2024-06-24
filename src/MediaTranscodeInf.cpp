@@ -1,7 +1,7 @@
 /*****************************************************************************
 * Copyright (C) 2020-2025 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
-* File Module           :       HlsServerInf.cpp
+* File Module           :       MediaTranscodeInf.cpp
 * Description           : 	    接口层，防止曝露内部文件
 * Created               :       2020.01.13.
 * Author                :       Yu Weifeng
@@ -9,11 +9,11 @@
 * Last Modified         : 	
 * History               : 	
 ******************************************************************************/
-#include "HlsServerInf.h"
-#include "HlsServer.h"
+#include "MediaTranscodeInf.h"
+#include "MediaTranscode.h"
 
 /*****************************************************************************
--Fuction        : WebRtcInterface
+-Fuction        : MediaTranscodeInf
 -Description    : 
 -Input          : 
 -Output         : 
@@ -22,14 +22,14 @@
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-HlsServerInf::HlsServerInf()
+MediaTranscodeInf::MediaTranscodeInf()
 {
     m_pHandle = NULL;
-    m_pHandle = new HlsServer();
+    m_pHandle = new MediaTranscode();
 }
 /*****************************************************************************
--Fuction        : ~WebRtcInterface
--Description    : ~WebRtcInterface
+-Fuction        : ~MediaTranscodeInf
+-Description    : ~MediaTranscodeInf
 -Input          : 
 -Output         : 
 -Return         : 
@@ -37,18 +37,18 @@ HlsServerInf::HlsServerInf()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-HlsServerInf::~HlsServerInf()
+MediaTranscodeInf::~MediaTranscodeInf()
 {
     if(NULL != m_pHandle)
     {
-        HlsServer *pHlsServer = (HlsServer *)m_pHandle;
-        delete pHlsServer;
+        MediaTranscode *pMediaTranscode = (MediaTranscode *)m_pHandle;
+        delete pMediaTranscode;
     }  
 }
 
 /*****************************************************************************
--Fuction        : Proc
--Description    : Proc
+-Fuction        : Transform
+-Description    : Transform
 -Input          : 
 -Output         : 
 -Return         : 
@@ -56,9 +56,9 @@ HlsServerInf::~HlsServerInf()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int HlsServerInf::HandleHttpReq(const char * i_strReq,char *o_strRes,int i_iResMaxLen)
+int MediaTranscodeInf::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
 {
-    HlsServer *pHlsServer = (HlsServer *)m_pHandle;
-    return pHlsServer->HandleHttpReq(i_strReq,o_strRes,i_iResMaxLen);
+    MediaTranscode *pMediaTranscode = (MediaTranscode *)m_pHandle;
+    return pMediaTranscode->Transform(i_pSrcFrame,o_pDstFrame);
 }
 

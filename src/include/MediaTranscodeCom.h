@@ -89,34 +89,6 @@ typedef struct CodecFrame
 
 
 
-typedef struct MediaFrameInfo
-{
-    unsigned char *pbFrameBuf;//缓冲区
-    int iFrameBufMaxLen;//缓冲区总大小
-    int iFrameBufLen;//缓冲区读到数据的总大小
-    int iFrameProcessedLen;
-    
-    //裸流的帧数据(数据流,eStreamType需要被赋值为对应的数据流格式)时，下面5个参数都需要外部赋值然后传入
-    E_StreamType eStreamType;//解析文件时,eStreamType外部赋值0(表示不是数据流(是文件)),下面4个参数则由内部赋值
-    E_MediaEncodeType eEncType;
-    unsigned int dwTimeStamp;//ms
-    unsigned int dwSampleRate;//dwSamplesPerSecond
-    E_MediaFrameType eFrameType;
-    unsigned int dwWidth;//
-    unsigned int dwHeight;//
-
-	//输出1帧数据结果
-    unsigned char *pbFrameStartPos;//包含00 00 00 01
-    int iFrameLen;
-    unsigned int dwNaluCount;//包括sps,pps等参数集对应的nalu
-    T_MediaNaluInfo atNaluInfo[MAX_NALU_CNT_ONE_FRAME];//存在一帧图像切片成多个(nalu)的情况
-    unsigned char bNaluLenSize;//avcc形式存储nalu是的naluLen的大小(所占字节数)
-    //unsigned int adwNaluEndOffset[MAX_NALU_CNT_ONE_FRAME];
-    T_VideoEncodeParam tVideoEncodeParam;
-    T_AudioEncodeParam tAudioEncodeParam;
-}T_MediaFrameInfo;
-
-
 
 
 #endif

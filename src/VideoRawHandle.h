@@ -12,11 +12,13 @@
 #ifndef VIDEO_RAW_HANDLE_H
 #define VIDEO_RAW_HANDLE_H
 
+extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "libavfilter/buffersink.h"
 #include "libavfilter/buffersrc.h"
 #include "libavutil/opt.h"
+}
 #include <thread>
 #include <mutex>
 #include <string>

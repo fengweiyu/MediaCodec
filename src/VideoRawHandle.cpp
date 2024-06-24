@@ -162,7 +162,7 @@ int VideoRawHandle::Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersD
         iRet=avfilter_graph_parse_ptr(m_ptFilterGraph,i_strFiltersDescr,&inputs,&outputs, NULL);
         if (iRet < 0) 
         {
-            CODEC_LOGE("avfilter_graph_parse_ptr err %s \r\n",);
+            CODEC_LOGE("avfilter_graph_parse_ptr err %s \r\n",i_strFiltersDescr);
             break;
         }
         iRet=avfilter_graph_config(m_ptFilterGraph, NULL);
