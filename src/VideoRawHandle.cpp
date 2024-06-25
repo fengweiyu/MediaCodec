@@ -223,6 +223,7 @@ int VideoRawHandle::RawHandle(AVFrame *m_ptAVFrame)
         if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
         {
             iRet=0;
+            CODEC_LOGD("FiltAVERROR_EOF,frame->data[0]%d, linesize[0]%d,fwidth%d,height%d \r\n", m_ptFiltFrame->data[0], m_ptFiltFrame->linesize[0],m_ptFiltFrame->width, m_ptFiltFrame->height);
             break;
         }
         if (iRet < 0)
@@ -232,6 +233,8 @@ int VideoRawHandle::RawHandle(AVFrame *m_ptAVFrame)
         //可能多帧m_ptFiltFrame
         //display_frame(m_ptFiltFrame, m_ptBufferSinkCtx->inputs[0]->time_base);
         //av_frame_unref(m_ptFiltFrame);
+
+        CODEC_LOGD("FiltFrame ,frame->data[0]%d, linesize[0]%d,fwidth%d,height%d \r\n", m_ptFiltFrame->data[0], m_ptFiltFrame->linesize[0],m_ptFiltFrame->width, m_ptFiltFrame->height);
     }
     //av_frame_move_ref(o_ptAVFrame,m_ptFiltFrame);//后续下面的操作可以优化为这一个
     av_frame_unref(m_ptAVFrame);

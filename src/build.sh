@@ -93,13 +93,30 @@ function CopyLib()
     mkdir x265
     mkdir x265/lib
 #    mkdir x265/include
+    mkdir fdk-aac
+    mkdir fdk-aac/lib
     cp $CurPwd/../lib/linux/$2/ffmpeg-7.0.1/lib/*.a $1/ThirdLib/ffmpeg/lib -rf
     cp $CurPwd/../lib/linux/$2/ffmpeg-7.0.1/include $1/ThirdLib/ffmpeg -rf
     cp $CurPwd/../lib/linux/$2/x264-stable/lib/*.a $1/ThirdLib/x264/lib -rf
     cp $CurPwd/../lib/linux/$2/x264-stable/include $1/ThirdLib/x264 -rf
     cp $CurPwd/../lib/linux/$2/x265_2.7/lib/*.a $1/ThirdLib/x265/lib -rf
     cp $CurPwd/../lib/linux/$2/x265_2.7/include $1/ThirdLib/x265 -rf
-
+    cp $CurPwd/../lib/linux/$2/fdk-aac-2.0.3/lib/*.a $1/ThirdLib/fdk-aac/lib -rf
+    cp $CurPwd/../lib/linux/$2/fdk-aac-2.0.3/include $1/ThirdLib/fdk-aac -rf
+    
+    mkdir freetype
+    mkdir freetype/lib
+    mkdir libxml2
+    mkdir libxml2/lib
+    mkdir libfontconfig
+    mkdir libfontconfig/lib
+    cp $CurPwd/../lib/linux/$2/freetype-2.13.2/lib/*.a $1/ThirdLib/freetype/lib -rf
+    cp $CurPwd/../lib/linux/$2/freetype-2.13.2/include $1/ThirdLib/freetype -rf
+    cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/lib/*.a $1/ThirdLib/libxml2/lib -rf
+    cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/include $1/ThirdLib/libxml2 -rf
+    cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/lib/*.a $1/ThirdLib/libfontconfig/lib -rf
+    cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/include $1/ThirdLib/libfontconfig -rf
+    
     cd $CurPwd
 }
 

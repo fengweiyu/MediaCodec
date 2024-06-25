@@ -82,7 +82,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
     
     
     iCodecID=CodecTypeToAvCodecId(i_eCodecType);
-    ptCodec = (AVCodec *)avcodec_find_decoder((enum AVCodecID)iCodecID);//查找解码器
+    ptCodec = (AVCodec *)avcodec_find_encoder((enum AVCodecID)iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
         CODEC_LOGE("NULL==ptCodec err \r\n");
@@ -165,6 +165,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
         return iRet;
     }
 
+    CODEC_LOGD("avcodec_open %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
     
     m_ptPacket = av_packet_alloc();
     if(NULL==m_ptPacket)
@@ -189,7 +190,8 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
 {
     int iRet = -1;
     int iFrameRate = 0;
-
+    int iFrameLen = 0;
+    
     if(NULL==m_ptPacket)
     {
         CODEC_LOGE("NULL==m_ptPacket Encode err \r\n");
@@ -203,11 +205,15 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
     i_ptAVFrame->pts = i_ptAVFrame->best_effort_timestamp;
     i_ptAVFrame->pts = av_rescale_q(i_ptAVFrame->pts, {1, 1000}, m_ptCodecContext->time_base);// 时间戳转换
 
-    i_ptAVFrame->pict_type = AV_PICTURE_TYPE_NONE;//
+    i_ptAVFrame->pict_type = AV_PICTURE_TYPE_NONE;//AV_PIX_FMT_YUV420P
     iRet = avcodec_send_frame(m_ptCodecContext, i_ptAVFrame);
     if (iRet < 0) 
     {
-        CODEC_LOGE("Error sending a frame for encoding\n");
+        if (iRet==AVERROR(EINVAL)) 
+        {
+            CODEC_LOGE("iRet==AVERROR(EINVAL) %d,%d\n",iRet,i_ptAVFrame->linesize[0]);
+        }
+        CODEC_LOGE("Error sending a frame for encoding %d,%d\n",iRet,i_ptAVFrame->linesize[0]);
         return iRet;
     }
     while (iRet >= 0) 
@@ -215,7 +221,8 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         iRet = avcodec_receive_packet(m_ptCodecContext, m_ptPacket);
         if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
         {
-            iRet=0;
+            iRet=iFrameLen;
+            //CODEC_LOGD("iRet == AVERROR_EOF %lld,size %d, data%p %d\r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data,m_ptPacket->flags);
             break;
         }
         else if (iRet < 0) 
@@ -224,10 +231,36 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
             av_packet_unref(m_ptPacket);
             return iRet;
         }
-        CODEC_LOGD("enc packet %lld,size %d, data%p \r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data, m_ptPacket->size);
+        CODEC_LOGD("enc size %d, packet %lld,data%p ,%d\r\n",m_ptPacket->size,m_ptPacket->pts, m_ptPacket->data,m_ptPacket->flags);
         //av_packet_unref(m_ptPacket);
+        if(iFrameLen>0)
+        {//暂不支持多帧取出，后续优化为数组或者list
+            CODEC_LOGW("already save frame,iFrameLen%d\r\n",iFrameLen);
+        }
+        if(m_ptPacket->size>i_dwFrameMaxLen-iFrameLen)
+        {
+            CODEC_LOGE("m_ptPacket->size%d>i_dwFrameMaxLen%d -iFrameLen%d err \r\n",m_ptPacket->size,i_dwFrameMaxLen,iFrameLen);
+            av_packet_unref(m_ptPacket);
+            return -1;
+        }
+        if (m_ptPacket->size > 0 && AV_PKT_FLAG_CORRUPT != m_ptPacket->flags) 
+        {
+            *o_iFrameType=m_ptPacket->flags == AV_PKT_FLAG_KEY ? CODEC_FRAME_TYPE_VIDEO_I_FRAME : CODEC_FRAME_TYPE_VIDEO_P_FRAME;
+            if (m_ptCodecContext->framerate.den > 0)
+            {
+                iFrameRate = m_ptCodecContext->framerate.num / m_ptCodecContext->framerate.den;
+            }
+            if (iFrameRate > 0)
+            {
+                *o_iFrameRate = iFrameRate;//时间戳外层可以根据帧率计算 m_ptPacket->pts
+            }
+            memcpy(o_pbFrameData+iFrameLen,m_ptPacket->data,m_ptPacket->size);
+            iFrameLen+=m_ptPacket->size;
+            iRet=iFrameLen;
+        }
+        av_packet_unref(m_ptPacket);
     }
-    if(m_ptPacket->size>i_dwFrameMaxLen)
+    /*if(m_ptPacket->size>i_dwFrameMaxLen)
     {
         CODEC_LOGE("m_ptPacket->size%d>i_dwFrameMaxLen%d err \r\n",m_ptPacket->size,i_dwFrameMaxLen);
         av_packet_unref(m_ptPacket);
@@ -247,7 +280,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         memcpy(o_pbFrameData,m_ptPacket->data,m_ptPacket->size);
         iRet=m_ptPacket->size;
     }
-    av_packet_unref(m_ptPacket);
+    av_packet_unref(m_ptPacket);*/
     return iRet;
 }
 

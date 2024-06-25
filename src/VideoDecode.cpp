@@ -88,6 +88,9 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     AVCodec * ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
     int iCodecID=AV_CODEC_ID_NONE;
     
+    //注册编解码器对象
+    //avcodec_register_all(); 
+    
     m_ptPacket = av_packet_alloc();
     if(NULL==m_ptPacket)
     {
@@ -189,9 +192,9 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
         CODEC_LOGE("NULL==m_ptFrame Decode err \r\n");
         return iRet;
     }
-    if(NULL==i_pbFrameData ||NULL==o_ptAVFrame)
+    if(NULL==i_pbFrameData ||NULL==o_ptAVFrame ||0==i_dwFrameLen)
     {
-        CODEC_LOGE("NULL==i_pbFrameData ||NULL==o_ptAVFrame err \r\n");
+        CODEC_LOGE("NULL==i_pbFrameData ||NULL==o_ptAVFrame||0==i_dwFrameLen err \r\n");
         return iRet;
     }
     pbFrameData=i_pbFrameData;
@@ -203,23 +206,29 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
 
     while (dwFrameLen > 0) 
     {
-        /*av_init_packet(m_ptPacket);
+        av_init_packet(m_ptPacket);
         m_ptPacket->data = pbFrameData;
         m_ptPacket->size = dwFrameLen;
         m_ptPacket->pts = ddwPTS;
-        m_ptPacket->dts = ddwDTS;*/
+        m_ptPacket->dts = ddwDTS;
+        pbFrameData += m_ptPacket->size;
+        dwFrameLen -= m_ptPacket->size;
+            
+        /*//初始化AVPacket对象
+        av_init_packet(m_ptPacket);
+        m_ptParser->flags |=PARSER_FLAG_COMPLETE_FRAMES;//等同上面手动赋值
         iRet = av_parser_parse2(m_ptParser,m_ptCodecContext, &m_ptPacket->data, &m_ptPacket->size,pbFrameData, dwFrameLen, ddwPTS, ddwDTS, 0);
         if (iRet < 0) 
         {
-            CODEC_LOGE("av_parser_parse2 err \r\n");
+            CODEC_LOGE("av_parser_parse2 err %d\r\n",iRet);
             return iRet;
         }
         pbFrameData += iRet;
-        dwFrameLen -= iRet;
+        dwFrameLen -= iRet;*/
         if (m_ptPacket->size<=0)
         {
             CODEC_LOGE("av_parser_parse2 err m_ptPacket->size<=0\r\n");
-            return iRet;
+            return -1;
         }
 
         iRet = avcodec_send_packet(m_ptCodecContext, m_ptPacket);
@@ -231,10 +240,11 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
         while (iRet >= 0) 
         {
             //av_frame_unref(m_ptFrame);//可能输出多帧
-            iRet = avcodec_receive_frame(m_ptCodecContext, m_ptFrame);
+            iRet = avcodec_receive_frame(m_ptCodecContext, m_ptFrame);//不av_frame_unref内部也会初始化
             if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
             {
                 iRet=0;
+                //CODEC_LOGD("iRet %d,,frame->data[0]%d, frame->linesize[0]%d,frame->width%d, frame->height%d \r\n", iRet,m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
                 break;
             }
             else if (iRet < 0) 
@@ -245,25 +255,48 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
             }
             /* the picture is allocated by the decoder. no need to
                free it */
-            CODEC_LOGD("dec frame ,frame->data[0]%d, frame->linesize[0]%d,frame->width%d, frame->height%d \r\n", 
-            /*m_ptCodecContext->frame_number,*/m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
+            CODEC_LOGD("dec   frame->linesize[0]%d,data[0]%x,width%d, height%d \r\n", m_ptFrame->linesize[0],
+            /*m_ptCodecContext->frame_number,*/m_ptFrame->data[0],m_ptFrame->width, m_ptFrame->height);
+
+            if(o_ptAVFrame->linesize[0]>0)
+            {//暂不支持多帧取出，后续o_ptAVFrame优化为数组或者list
+                iRet=0;
+                CODEC_LOGW("already save frame,frame%d->linesize%d,width%d, height%d\r\n",m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
+                break;
+            }
+            //av_frame_move_ref(o_ptAVFrame,m_ptFrame);//后续下面的操作可以优化为这一个
+            iRet=av_frame_ref(o_ptAVFrame,m_ptFrame);
+            if (iRet < 0)
+            {
+                CODEC_LOGE("Decode av_frame_ref err %d\r\n",iRet);
+                av_frame_unref(m_ptFrame);
+                return iRet;
+            }
+            iRet=av_frame_copy(o_ptAVFrame,m_ptFrame);
+            if (iRet < 0)
+            {
+                CODEC_LOGE("Decode av_frame_copy err %d \r\n",iRet);
+                av_frame_unref(o_ptAVFrame);
+            }
+            av_frame_unref(m_ptFrame);
         }
     }
+    /*
     //av_frame_move_ref(o_ptAVFrame,m_ptFrame);//后续下面的操作可以优化为这一个
     iRet=av_frame_ref(o_ptAVFrame,m_ptFrame);
     if (iRet < 0)
     {
-        CODEC_LOGE("av_frame_ref err \r\n");
+        CODEC_LOGE("Decode av_frame_ref err %d\r\n",iRet);
         av_frame_unref(m_ptFrame);
         return iRet;
     }
     iRet=av_frame_copy(o_ptAVFrame,m_ptFrame);
     if (iRet < 0)
     {
-        CODEC_LOGE("av_frame_copy err \r\n");
+        CODEC_LOGE("Decode av_frame_copy err %d \r\n",iRet);
         av_frame_unref(o_ptAVFrame);
     }
-    av_frame_unref(m_ptFrame);
+    av_frame_unref(m_ptFrame);*/
     return iRet;
 }
 /*****************************************************************************

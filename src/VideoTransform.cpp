@@ -35,7 +35,7 @@ VideoTransform::VideoTransform()
     m_pVideoDecode = NULL;
     m_pVideoRawHandle = NULL;
     m_pVideoEncode = NULL;
-
+    m_ptAVFrame = av_frame_alloc();
 }
 /*****************************************************************************
 -Fuction        : ~VideoTransform
@@ -64,7 +64,11 @@ VideoTransform::~VideoTransform()
         delete m_pVideoEncode;
         m_pVideoEncode = NULL;
     }
-    
+    if(NULL!=m_ptAVFrame)
+    {
+        av_frame_free(&m_ptAVFrame);
+        m_ptAVFrame=NULL;
+    }
 }
 
 /*****************************************************************************
@@ -80,9 +84,15 @@ VideoTransform::~VideoTransform()
 int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
 {
     int iRet = -1;
-    AVFrame * ptAVFrame=NULL;
     char strTemp[512] = { 0 };
+    
+    if(NULL==m_ptAVFrame)
+    {
+        CODEC_LOGE("NULL==m_ptAVFrame err \r\n");
+        return iRet;
+    }
 
+    
     if(NULL== m_pVideoDecode)
     {
         m_pVideoDecode = new VideoDecode();
@@ -93,21 +103,15 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         }
         iRet=m_pVideoDecode->Init(i_pSrcFrame->eEncType);
     }
-    ptAVFrame = av_frame_alloc();
-    if(NULL==ptAVFrame)
-    {
-        CODEC_LOGE("NULL==ptAVFrame err \r\n");
-        return iRet;
-    }
-    
-    iRet=m_pVideoDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,i_pSrcFrame->ddwPTS,i_pSrcFrame->ddwDTS,ptAVFrame);
+    av_frame_unref(m_ptAVFrame);
+    iRet=m_pVideoDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,i_pSrcFrame->ddwPTS,i_pSrcFrame->ddwDTS,m_ptAVFrame);
     if(iRet<0)
     {
         CODEC_LOGE("m_pVideoDecode->Decode err \r\n");
         return iRet;
     }
 
-
+#if 0
     if(NULL== m_pVideoRawHandle)
     {
         m_pVideoRawHandle = new VideoRawHandle();
@@ -119,17 +123,20 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         AVCodecContext *ptCodecContext=NULL;
         iRet=m_pVideoDecode->GetCodecContext(&ptCodecContext);
         time_t rawtime = time(NULL);
-        struct tm *timeinfo = localtime(&rawtime); // ?????????????????
-        snprintf(strTemp,sizeof(strTemp),"drawtext=fontfile=msyhbd.ttc:fontcolor=red:fontsize=25:x=50:y=20:text='%s'",asctime(timeinfo));
+        struct tm *timeinfo = localtime(&rawtime); //
+        char strBuffer[64] = { 0 };
+        strftime(strBuffer,sizeof(strBuffer),"%Y-%m-%d %H-%M-%S",timeinfo);
+        snprintf(strTemp,sizeof(strTemp),"drawtext=fontfile=msyhbd.ttc:fontcolor=red:fontsize=25:x=50:y=20:text=\"%s\"",strBuffer);//asctime(timeinfo)
+        CODEC_LOGE("RawHandle:%s \r\n",strTemp);
         iRet=m_pVideoRawHandle->Init(ptCodecContext,strTemp);
     }
-    iRet=m_pVideoRawHandle->RawHandle(ptAVFrame);
+    iRet=m_pVideoRawHandle->RawHandle(m_ptAVFrame);
     if(iRet<0)
     {
         CODEC_LOGE("m_pVideoRawHandle->RawHandle err \r\n");
         return iRet;
     }
-
+#endif 
 
     if(NULL== m_pVideoEncode)
     {
@@ -141,13 +148,14 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         }
         iRet=m_pVideoEncode->Init(o_pDstFrame->eEncType,o_pDstFrame->iFrameRate,(int)o_pDstFrame->dwWidth,(int)o_pDstFrame->dwHeight);
     }
-    iRet=m_pVideoEncode->Encode(ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,&o_pDstFrame->iFrameRate,&o_pDstFrame->eFrameType);
+    iRet=m_pVideoEncode->Encode(m_ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,&o_pDstFrame->iFrameRate,&o_pDstFrame->eFrameType);
     if(iRet<=0)
     {
         CODEC_LOGE("m_pVideoEncode->Encode err \r\n");
         return -1;
     }
     o_pDstFrame->iFrameBufLen=iRet;
+    
     return iRet;
 }
 

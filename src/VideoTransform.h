@@ -43,6 +43,7 @@ public:
 	virtual ~VideoTransform();
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
+    AVFrame * m_ptAVFrame;
 
 	VideoDecode *m_pVideoDecode;
 	VideoEncode *m_pVideoEncode;
