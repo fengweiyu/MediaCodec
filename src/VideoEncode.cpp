@@ -120,6 +120,11 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
     m_ptCodecContext->flags |= AV_CODEC_FLAG2_LOCAL_HEADER;
     // Optional Param
     m_ptCodecContext->max_b_frames = 0;
+    
+    m_ptCodecContext->slices= 1;//nalu不切片，赋值1或者0
+    m_ptCodecContext->thread_count = 1;//如果只是设置slices还是会切片，因为默认多线程编码(以片为单位)会导致切片
+    m_ptCodecContext->thread_type = FF_THREAD_FRAME;//设置以帧为单位的单线程编码(以帧为单位的多线程编码会报错)，这样才不会切片
+    
     if (iCodecID == AV_CODEC_ID_H264) 
     {
         m_ptCodecContext->profile = FF_PROFILE_H264_BASELINE;
