@@ -44,6 +44,16 @@ function BuildLib()
     fi  
     mkdir $OutputPath
     
+    freetypeName="freetype-2.13.2"
+    if [ -e "$freetypeName" ]; then
+        rm $freetypeName -rf
+    fi  
+    tar -xf $freetypeName.tar.gz
+    aacName="fdk-aac-2.0.3"
+    if [ -e "$aacName" ]; then
+        rm $aacName -rf
+    fi  
+    tar -xf $aacName.tar.gz
     x264Name="x264-stable"
     if [ -e "$x264Name" ]; then
         rm $x264Name -rf
@@ -60,6 +70,23 @@ function BuildLib()
     fi  
     tar -xf $ffmpegName.tar.gz #tar -xvf
     
+    xml2Name="libxml2-2.9.12"
+    if [ -e "$xml2Name" ]; then
+        rm $xml2Name -rf
+    fi  
+    tar -xf $xml2Name.tar.gz
+    fontconfigName="libfontconfig-5.1.0"
+    if [ -e "$fontconfigName" ]; then
+        rm $fontconfigName -rf
+    fi  
+    tar -xf $fontconfigName.tar.gz
+    
+    
+    
+    cd $freetypeName
+    ./configure --prefix=$OutputPath/$freetypeName
+    make -j4;make install
+    cd -
     cd $x264Name
 #   ./configure  --host=aarch64-apple-darwin --prefix=/opt/local --enable-shared --enable-static --disable-asm
     ./configure --prefix=$OutputPath/$x264Name --enable-shared --enable-static --disable-asm
@@ -71,26 +98,45 @@ function BuildLib()
     make -j4;make install
     cd -
 #COMMENT
-    cd $ffmpegName
     #x264库所在的位置，ffmpeg 需要链接 x264
     x264LIB_DIR=$OutputPath/$x264Name
     x265LIB_DIR=$OutputPath/$x265Name
+    freetypeLIB_DIR=$OutputPath/$freetypeName
     #x264的头文件地址
     x264INC="$x264LIB_DIR/include"
     x265INC="$x265LIB_DIR/include"
     #x264的静态库地址export PKG_CONFIG_PATH=/usr/bin/pkg-config:$PKG_CONFIG_PATH
     x264LIB="$x264LIB_DIR/lib"
     x265LIB="$x265LIB_DIR/lib"
-    export PKG_CONFIG_PATH=$x264LIB/pkgconfig:$x265LIB/pkgconfig:$PKG_CONFIG_PATH #找到 x264 库的 pkg-config 文件
-    #--enable-vaapi 后续支持vaapi(封装底层显卡编解码库的硬件加速库，例如win端的d3dxl)，ERROR: vaapi requested but not found
-    ADD_FEATURE="--enable-static  --enable-shared --enable-gpl --enable-debug --enable-libx264 --enable-libx265 " #--extra-cflags=-I$x264INC -I$x265INC --extra-ldflags=-L$x264LIB -L$x265LIB" 有pkgconfig就暂不需要指定
+    freetypeLIB="$freetypeLIB_DIR/lib"
+
+    cd $xml2Name
+    ./configure --prefix=$OutputPath/$xml2Name -without-python -without-zlib
+    make -j4;make install
+    cd -
+    export PKG_CONFIG_PATH=$freetypeLIB/pkgconfig:$OutputPath/$xml2Name/lib/pkgconfig:$PKG_CONFIG_PATH
+    cd $fontconfigName
+    ./configure --prefix=$OutputPath/$fontconfigName --enable-libxml2 --enable-static
+    make -j4;make install
+    cd -
+    
+    cd $aacName
+    ./configure --prefix=$OutputPath/$aacName
+    make -j4;make install
+    cd -
+    export PKG_CONFIG_PATH=$OutputPath/$fontconfigName/lib/pkgconfig:$OutputPath/$aacName/lib/pkgconfig:$freetypeLIB/pkgconfig:$x264LIB/pkgconfig:$x265LIB/pkgconfig:$PKG_CONFIG_PATH #找到 x264 库的 pkg-config 文件
+    cd $ffmpegName
+    #--enable-vaapi 后续支持vaapi(封装底层显卡编解码库的硬件加速库，例如win端的d3dxl)，ERROR: vaapi requested but not found如果想要使用drawtext，编译时需要加上--enable-libfreetype。要选择多种字体，需要加上--enable-libfontconfig。还需要字体变形，需要加上--enable-libfribidi
+    ADD_FEATURE="--enable-static --enable-shared --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libfreetype --enable-libfontconfig --enable-nonfree --enable-libfdk-aac" #--extra-cflags=-I$x264INC -I$x265INC --extra-ldflags=-L$x264LIB -L$x265LIB" 有pkgconfig就暂不需要指定
 #./configure --prefix=/mnt/d/linuxCode/third/ffmpegmsvc --target-os=win64 --arch=x86_64 --enable-shared --toolchain=msvc --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi
 #./configure --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi #--pkg-config="pkg-config --static"
 #./configure --prefix=/mnt/d/linuxCode/third/ffmpeglinux --arch=x86_64 --enable-static --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi
-    echo -e "./configure --prefix=$OutputPath/$ffmpegName --pkg-config-flags="--static" --arch=x86_64 --disable-x86asm $ADD_FEATURE "
     ./configure --prefix=$OutputPath/$ffmpegName --pkg-config-flags="--static" --arch=x86_64 --disable-x86asm $ADD_FEATURE 
     make -j4;make install
     cd -
+    
+    echo -e "export PKG_CONFIG_PATH=$PKG_CONFIG_PATH "
+    echo -e "./configure --prefix=$OutputPath/$ffmpegName --pkg-config-flags="--static" --arch=x86_64 --disable-x86asm $ADD_FEATURE "
 }
 
 function CopyLib()
