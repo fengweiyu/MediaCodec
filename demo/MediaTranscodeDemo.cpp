@@ -117,8 +117,8 @@ int MediaTranscodeDemo :: proc(const char * i_strSrcFileName,const char * i_strD
                 break;
             } 
             //iWriteLen = oMediaHandle.FrameToContainer(&tFileFrameInfo,STREAM_TYPE_FMP4_STREAM,pbFileBuf,MEDIA_FILE_BUF_MAX_LEN,&iHeaderLen);
-            iRet = fwrite(tSrcFrame.pbFrameBuf,1,tSrcFrame.iFrameBufLen, pMediaFile);
-            if(iRet != tSrcFrame.iFrameBufLen)
+            iRet = fwrite(tDstFrame.pbFrameBuf,1,tDstFrame.iFrameBufLen, pMediaFile);
+            if(iRet != tDstFrame.iFrameBufLen)
             {
                 CODEC_LOGE("fwrite err %d iWriteLen%d\r\n",iRet,iWriteLen);
                 break;
@@ -163,7 +163,8 @@ int MediaTranscodeDemo :: MediaFrameToCodecFrame(T_MediaFrameInfo * i_ptMediaFra
         return iRet;
     }
     i_ptCodecFrame->pbFrameBuf=i_ptMediaFrame->pbFrameStartPos;
-    i_ptCodecFrame->iFrameBufMaxLen=i_ptMediaFrame->iFrameLen;
+    i_ptCodecFrame->iFrameBufMaxLen=i_ptMediaFrame->iFrameLen;//
+    i_ptCodecFrame->iFrameBufLen=i_ptMediaFrame->iFrameLen;
 
     switch (i_ptMediaFrame->eFrameType)
     {
