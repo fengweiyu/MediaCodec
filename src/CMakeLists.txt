@@ -19,14 +19,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(src_list
     MediaTranscodeInf.cpp
 	MediaTranscode.cpp
-#    AudioDecode.cpp
-#    AudioRawHandle.cpp
-#    AudioEncode.cpp
-#    AudioTransform.cpp
+    AudioTransform.cpp
+    AudioDecode.cpp
+    AudioRawHandle.cpp
+    AudioEncode.cpp
+    VideoTransform.cpp
     VideoDecode.cpp
     VideoRawHandle.cpp
     VideoEncode.cpp
-    VideoTransform.cpp
 	)		
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include

@@ -83,7 +83,7 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     
     /* Find the encoder to be used by its name. */
     iCodecID=CodecTypeToAvCodecId(i_eCodecType);
-    ptCodec = avcodec_find_encoder(iCodecID);//查找解码器
+    ptCodec = (AVCodec  *)avcodec_find_encoder((enum AVCodecID)iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
         CODEC_LOGE("NULL==ptCodec err \r\n");
@@ -310,9 +310,10 @@ int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst)
 {
     const AVChannelLayout *p, *best_ch_layout;
     int best_nb_channels   = 0;
-
+    AVChannelLayout ch_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;
+    
     if (!codec->ch_layouts)
-        return av_channel_layout_copy(dst, &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO);
+        return av_channel_layout_copy(dst, &ch_layout);
 
     p = codec->ch_layouts;
     while (p->nb_channels) {

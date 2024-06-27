@@ -12,6 +12,8 @@
 #ifndef AUDIO_DECODE_H
 #define AUDIO_DECODE_H
 
+
+#include "MediaTranscodeCom.h"
 extern "C" {
 #include <libavutil/frame.h>
 #include <libavutil/mem.h>

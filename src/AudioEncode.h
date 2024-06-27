@@ -12,6 +12,8 @@
 #ifndef AUDIO_ENCODE_H
 #define AUDIO_ENCODE_H
 
+
+#include "MediaTranscodeCom.h"
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/channel_layout.h>

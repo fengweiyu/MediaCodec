@@ -86,7 +86,7 @@ AudioDecode::~AudioDecode()
 int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels)
 {
     int iRet = -1;
-    AVCodec         *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
+    AVCodec *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
     int iCodecID=AV_CODEC_ID_NONE;
     
     m_ptPacket = av_packet_alloc();
@@ -96,7 +96,7 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
         return iRet;
     }
     iCodecID=CodecTypeToAvCodecId(i_eCodecType);
-    ptCodec = avcodec_find_decoder(iCodecID);//查找解码器
+    ptCodec = (AVCodec *)avcodec_find_decoder((enum AVCodecID)iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
         CODEC_LOGE("NULL==ptCodec err \r\n");
@@ -121,12 +121,12 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
 
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
-        CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name(iCodecID));
+        CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
         return iRet;
     }
     
     int iSrcBitsSample = av_get_bits_per_sample(m_ptCodecContext->codec_id);//源每个样本(帧)多少位
-    int iSrcBytesSample= iSrcBitsSample * m_ptCodecContext->channels / 8;//源每个样本(帧)多少字节(已计算通道数)
+    int iSrcBytesSample= iSrcBitsSample * m_ptCodecContext->ch_layout.nb_channels / 8;//iSrcBitsSample * m_ptCodecContext->channels / 8;//源每个样本(帧)多少字节(已计算通道数)
 
     m_ptFrame = av_frame_alloc();
     if(NULL==m_ptFrame)

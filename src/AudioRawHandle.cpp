@@ -176,10 +176,11 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
     }
     
     /* Convert the samples using the resampler. */
-    int iSampleNum = swr_convert(m_ptResmapleCtx, m_ppbConvertedSamples, m_iCurConvertedSamplesSize, (const uint8_t**)m_ptAVFrame->data, m_ptAVFrame->nb_samples);
+    iSampleNum = swr_convert(m_ptResmapleCtx, m_ppbConvertedSamples, m_iCurConvertedSamplesSize, (const uint8_t**)m_ptAVFrame->data, m_ptAVFrame->nb_samples);
     if (0 > iSampleNum) 
     {
-        CODEC_LOGE("Could not convert input samples (error '%s')\n",av_err2str(iSampleNum));
+        CODEC_LOGE("swr_convert (error '%d')\n",iSampleNum);
+        //CODEC_LOGE("Could not convert input samples (error '%s')\n",av_err2str(iSampleNum));//error: taking address of temporary array
         return iSampleNum;
     }
 
@@ -310,7 +311,8 @@ int AudioRawHandle::InitConvertedSamples(AVCodecContext *i_ptDstEncodeCtx,int i_
                                   iUpperSampleSize,
                                   i_ptDstEncodeCtx->sample_fmt, 0)) < 0) 
     {
-        CODEC_LOGE("Could not allocate converted input samples (error '%s')\n",av_err2str(iRet));
+        //CODEC_LOGE("Could not allocate converted input samples (error '%s')\n",av_err2str(iRet));//error: taking address of temporary array
+        CODEC_LOGE("Could not allocate converted input samples (error '%d')\n",iRet);
         return iRet;
     }
     m_iCurConvertedSamplesSize=iUpperSampleSize;
@@ -411,8 +413,9 @@ int AudioRawHandle::InitAudioFrame(AVCodecContext *i_ptDstEncodeCtx,int i_iFrame
     if(m_iAudioFrameBufSamples>=i_iFrameSize)//减少频繁申请内存
     {
         m_ptAudioFrame->nb_samples = i_iFrameSize;
-        m_ptAudioFrame->channel_layout = i_ptDstEncodeCtx->channel_layout;
-        m_ptAudioFrame->format = i_ptDstEncodeCtx->sample_fmt;
+        //m_ptAudioFrame->channel_layout = i_ptDstEncodeCtx->channel_layout;//旧版本操作ffmpeg4.2.1
+        av_channel_layout_copy(&(m_ptAudioFrame)->ch_layout, &i_ptDstEncodeCtx->ch_layout);//新版本操作ffmpeg 7.0.1
+        m_ptAudioFrame->format = (int)i_ptDstEncodeCtx->sample_fmt;
         m_ptAudioFrame->sample_rate = i_ptDstEncodeCtx->sample_rate;
         return 0;
     }
@@ -426,8 +429,9 @@ int AudioRawHandle::InitAudioFrame(AVCodecContext *i_ptDstEncodeCtx,int i_iFrame
      * Default channel layouts based on the number of channels
      * are assumed for simplicity. */
     m_ptAudioFrame->nb_samples = i_iFrameSize;
-    m_ptAudioFrame->channel_layout = i_ptDstEncodeCtx->channel_layout;
-    m_ptAudioFrame->format = i_ptDstEncodeCtx->sample_fmt;
+    //m_ptAudioFrame->channel_layout = i_ptDstEncodeCtx->channel_layout;//旧版本操作ffmpeg4.2.1
+    av_channel_layout_copy(&(m_ptAudioFrame)->ch_layout, &i_ptDstEncodeCtx->ch_layout);//新版本操作ffmpeg 7.0.1
+    m_ptAudioFrame->format = (int)i_ptDstEncodeCtx->sample_fmt;
     m_ptAudioFrame->sample_rate = i_ptDstEncodeCtx->sample_rate;
 
     /* Allocate the samples of the created frame. This call will make
