@@ -33,6 +33,7 @@
 MediaTranscode::MediaTranscode()
 {
     m_pVideoTransform = NULL;
+    m_pAudioTransform = new AudioTransform();
 }
 /*****************************************************************************
 -Fuction        : ~VideoTransform
@@ -46,6 +47,11 @@ MediaTranscode::MediaTranscode()
 ******************************************************************************/
 MediaTranscode::~MediaTranscode()
 {
+    if(NULL!= m_pAudioTransform)
+    {
+        delete m_pAudioTransform;
+        m_pAudioTransform = NULL;
+    }
     if(NULL!= m_pVideoTransform)
     {
         delete m_pVideoTransform;
@@ -75,7 +81,12 @@ int MediaTranscode::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
     
     if(i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME)
     {
-        CODEC_LOGE("i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME \r\n");
+        if(NULL== m_pAudioTransform)
+        {
+            CODEC_LOGE("NULL== m_pAudioTransform \r\n");
+            return iRet;
+        }
+        iRet=m_pAudioTransform->Transform(i_pSrcFrame,o_pDstFrame);
         return iRet;
     }
     
@@ -114,7 +125,7 @@ int MediaTranscode::GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFr
     
     if(i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME)
     {
-        CODEC_LOGE("i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME \r\n");
+        iRet=m_pAudioTransform->GetDstFrame(o_pDstFrame);
         return iRet;
     }
 

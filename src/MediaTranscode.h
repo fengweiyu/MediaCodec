@@ -13,6 +13,7 @@
 #define MEDIA_TRANSCODE_H
 
 #include "VideoTransform.h"
+#include "AudioTransform.h"
 #include <thread>
 #include <mutex>
 #include <string>
@@ -41,7 +42,7 @@ public:
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
     int GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
-        
+    AudioTransform *m_pAudioTransform;
     VideoTransform *m_pVideoTransform;
 };
 
