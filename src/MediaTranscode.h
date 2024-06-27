@@ -39,6 +39,7 @@ public:
 	MediaTranscode();
 	virtual ~MediaTranscode();
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
+    int GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
         
     VideoTransform *m_pVideoTransform;

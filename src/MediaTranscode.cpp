@@ -92,3 +92,32 @@ int MediaTranscode::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
     return iRet;
 }
 
+/*****************************************************************************
+-Fuction        : GetDstFrame
+-Description    : 
+-Input          : 
+-Output         : 
+-Return         : >0表示取到帧的大小，=0表示帧数据取完了
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int MediaTranscode::GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
+{
+    int iRet = -1;
+
+    if(NULL== i_pSrcFrame || NULL== o_pDstFrame)
+    {
+        CODEC_LOGE("NULL== i_pSrcFrame || NULL== o_pDstFrame err \r\n");
+        return iRet;
+    }
+    
+    if(i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME)
+    {
+        CODEC_LOGE("i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME \r\n");
+        return iRet;
+    }
+
+    return iRet;
+}
+

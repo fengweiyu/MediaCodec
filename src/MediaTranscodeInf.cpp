@@ -62,3 +62,19 @@ int MediaTranscodeInf::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstF
     return pMediaTranscode->Transform(i_pSrcFrame,o_pDstFrame);
 }
 
+/*****************************************************************************
+-Fuction        : GetDstFrame
+-Description    : GetDstFrame
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int MediaTranscodeInf::GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
+{
+    MediaTranscode *pMediaTranscode = (MediaTranscode *)m_pHandle;
+    return pMediaTranscode->GetDstFrame(i_pSrcFrame,o_pDstFrame);
+}
+

@@ -28,6 +28,7 @@ public:
 	MediaTranscodeInf();
 	virtual ~MediaTranscodeInf();
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
+    int GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
     void * m_pHandle;
 };

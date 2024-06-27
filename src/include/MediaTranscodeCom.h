@@ -81,6 +81,8 @@ typedef struct CodecFrame
     E_CodecFrameType eFrameType;
     unsigned int dwWidth;//
     unsigned int dwHeight;//
+    unsigned int dwChannels;//音频通道个数
+    int iAudioFrameSize;//音频数据每帧固定长度大小,比如pcma 8000采样率的是160
 
 	//输出1帧数据结果(目前用不上，可删除)
     //unsigned char *pbFrameStartPos;//包含00 00 00 01
