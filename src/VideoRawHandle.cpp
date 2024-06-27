@@ -209,7 +209,7 @@ int VideoRawHandle::RawHandle(AVFrame *m_ptAVFrame)
         return iRet;
     }
 
-    m_ptAVFrame->pts = m_ptAVFrame->best_effort_timestamp;//当该标志被设置时，FFmpeg会尝试使用最接近的时间戳来表示每个解码帧的时间戳，即尽可能接近原始媒体中的时间戳
+    //m_ptAVFrame->pts = m_ptAVFrame->best_effort_timestamp;//当该标志被设置时，FFmpeg会尝试使用最接近的时间戳来表示每个解码帧的时间戳，即尽可能接近原始媒体中的时间戳
     /* push the decoded frame into the filtergraph */
     if (av_buffersrc_add_frame_flags(m_ptBufferSrcCtx, m_ptAVFrame, AV_BUFFERSRC_FLAG_KEEP_REF) < 0) 
     {

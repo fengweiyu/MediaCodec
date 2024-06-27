@@ -110,7 +110,8 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         CODEC_LOGE("m_pVideoDecode->Decode err \r\n");
         return iRet;
     }
-
+    
+    m_ptAVFrame->pts = m_ptAVFrame->best_effort_timestamp;//当该标志被设置时，FFmpeg会尝试使用最接近的时间戳来表示每个解码帧的时间戳，即尽可能接近原始媒体中的时间戳
 #if 0
     if(NULL== m_pVideoRawHandle)
     {
@@ -125,7 +126,7 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         time_t rawtime = time(NULL);
         struct tm *timeinfo = localtime(&rawtime); //
         char strBuffer[64] = { 0 };
-        strftime(strBuffer,sizeof(strBuffer),"%Y-%m-%d %H-%M-%S",timeinfo);
+        strftime(strBuffer,sizeof(strBuffer),"%Y-%m-%d %H-%M-%S",timeinfo);//,scale=xx:h=xx //scale=w=iw/2:h=ih/2 //scale=320:-1
         snprintf(strTemp,sizeof(strTemp),"drawtext=fontfile=msyhbd.ttc:fontcolor=red:fontsize=25:x=50:y=20:text=\"%s\"",strBuffer);//asctime(timeinfo)
         CODEC_LOGE("RawHandle:%s \r\n",strTemp);
         iRet=m_pVideoRawHandle->Init(ptCodecContext,strTemp);
