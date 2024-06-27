@@ -271,7 +271,7 @@ int MediaTranscodeDemo :: CreateCodecFrame(const char * i_strDstFileName,unsigne
     i_ptCodecFrame->iFrameBufMaxLen=iCodecBufMaxLen;
 
     i_ptCodecFrame->iFrameRate=25;
-    i_ptCodecFrame->dwWidth=800;//宽高最好要和原来保持一致
+    i_ptCodecFrame->dwWidth=800;//宽高最好要和原来保持一致(否则要用filter去缩放处理)//,scale=xx:h=xx //scale=w=iw/2:h=ih/2 //scale=320:-1
     i_ptCodecFrame->dwHeight=448;//如果不一致，特别是变小的情况下，直接去编码，会导致画面被裁减 乃至绿屏，甚至程序会奔溃
     
     return 0;
