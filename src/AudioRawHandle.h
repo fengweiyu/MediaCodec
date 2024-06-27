@@ -12,22 +12,18 @@
 #ifndef AUDIO_RAW_HANDLE_H
 #define AUDIO_RAW_HANDLE_H
 
-#include "libavcodec/avcodec.h"
+extern "C" {
 #include "libavformat/avformat.h"
-#include "libavfilter/buffersink.h"
-#include "libavfilter/buffersrc.h"
+#include "libavformat/avio.h"
+#include "libavcodec/avcodec.h"
+#include "libavutil/audio_fifo.h"
+#include "libavutil/avassert.h"
+#include "libavutil/avstring.h"
+#include "libavutil/channel_layout.h"
+#include "libavutil/frame.h"
 #include "libavutil/opt.h"
-#include <thread>
-#include <mutex>
-#include <string>
-#include <list>
-#include <map>
-
-using std::map;
-using std::string;
-using std::list;
-using std::mutex;
-using std::thread;
+#include "libswresample/swresample.h"
+}
 
 
 
@@ -43,15 +39,23 @@ class AudioRawHandle
 public:
 	AudioRawHandle();
 	virtual ~AudioRawHandle();
-    int Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersDescr);
-    int RawHandle(AVFrame *m_ptAVFrame);
-    
+    int Init(AVCodecContext *i_ptSrcDecodeCtx,AVCodecContext *i_ptDstEncodeCtx,int i_iDstFrameSize);
+    int RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeCtx);
+    int GetFrame(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeCtx,int i_iUseAllSampleFlag=0);
 private:
-        
-    AVFrame     *m_ptFiltFrame;//存储一帧解码后像素（采样）数据
-    AVFilterContext *m_ptBufferSrcCtx;
-    AVFilterContext *m_ptBufferSinkCtx;
-    AVFilterGraph *m_ptFilterGraph;
+    int InitConvertedSamples(AVCodecContext *i_ptDstEncodeCtx,int i_iSampleNum);
+    int GetFrameFromFifo(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeCtx,int i_iFrameSize);
+    int InitAudioFrame(AVCodecContext *i_ptDstEncodeCtx,int i_iFrameSize); 
+
+    AVAudioFifo *m_ptAudioFifo;//
+    SwrContext * m_ptResmapleCtx;    ///< 重采样器
+    unsigned char** m_ppbConvertedSamples; ///< 重采样缓存
+    int m_iCurConvertedSamplesSize;
+    int m_iDstFrameSize;//转换后的帧大小,由外部设置
+    AVFrame * m_ptAudioFrame;
+    int m_iAudioFrameBufSamples;//m_ptAudioFrame中分配的缓存总大小
+    int64_t m_ddwAudioFramePTS;
+    int64_t m_ddwAudioFrameBasePTS;
 };
 
 

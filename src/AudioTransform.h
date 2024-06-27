@@ -42,7 +42,10 @@ public:
 	AudioTransform();
 	virtual ~AudioTransform();
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
+    int GetDstFrame(T_CodecFrame *o_pDstFrame);
+    
 private:
+    AVFrame * m_ptAVFrame;
 
 	AudioDecode *m_pAudioDecode;
 	AudioEncode *m_pAudioEncode;

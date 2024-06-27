@@ -83,7 +83,7 @@ AudioDecode::~AudioDecode()
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int AudioDecode::Init(E_CodecType i_eCodecType)
+int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels)
 {
     int iRet = -1;
     AVCodec         *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
@@ -115,48 +115,19 @@ int AudioDecode::Init(E_CodecType i_eCodecType)
         return iRet;
     }
     // Decoder Setting
-    //m_ptCodecContext->codec_id = iCodecID;
-    //m_ptCodecContext->codec_type = AVMEDIA_TYPE_Audio;
-    //m_ptCodecContext->pix_fmt = AV_PIX_FMT_NONE;
-    //m_ptCodecContext->width = i_width_;
-    //m_ptCodecContext->height = i_height_;
-    //m_ptCodecContext->framerate = { 0, 1 };
-    m_ptCodecContext->time_base = { 1, 1000 };//设置时间(基)以ms为单位
-    //m_ptCodecContext->skip_frame = AVDISCARD_NONREF; // 跳过非参考帧
-    //m_ptCodecContext->err_recognition = AV_EF_CRCCHECK | AV_EF_BITSTREAM | AV_EF_EXPLODE | AV_EF_COMPLIANT;
-    if (iCodecID == AV_CODEC_ID_MJPEG) 
-    {
-        //m_ptCodecContext->gop_size = i_fps;
-    }
-    // m_ptCodecContext->time_base = {1, AV_TIME_BASE};
-    m_ptCodecContext->thread_count = 1;
-    if (ptCodec->capabilities | AV_CODEC_CAP_FRAME_THREADS) 
-    {
-      m_ptCodecContext->thread_type = FF_THREAD_FRAME;
-    }
-    else if (ptCodec->capabilities | AV_CODEC_CAP_SLICE_THREADS)
-    {
-      m_ptCodecContext->thread_type = FF_THREAD_SLICE;
-    }
-    else 
-    {
-        m_ptCodecContext->thread_count = 1; // don't use multithreading
-    }
-    //if (ptCodec->capabilities & AV_CODEC_CAP_TRUNCATED) 
-    {
-        //m_ptCodecContext->flags |= AV_CODEC_FLAG_TRUNCATED;
-    }
-    
-    AVDictionary * ptOpts = NULL;
-    av_dict_set(&ptOpts, "preset", "ultrafast", 0);
-    av_dict_set(&ptOpts, "tune", "stillimage,fastdecode,zerolatency", 0);
-    //if (avcodec_open2(m_ptCodecContext, ptCodec, &ptOpts) < 0)
+    m_ptCodecContext->sample_rate = i_iSampleRate;
+    //m_ptCodecContext->channels = i_iChannels;//新版本已经删除
+    //m_ptCodecContext->ch_layout.nb_channels = i_iChannels;//新版本
+
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
         CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name(iCodecID));
         return iRet;
     }
     
+    int iSrcBitsSample = av_get_bits_per_sample(m_ptCodecContext->codec_id);//源每个样本(帧)多少位
+    int iSrcBytesSample= iSrcBitsSample * m_ptCodecContext->channels / 8;//源每个样本(帧)多少字节(已计算通道数)
+
     m_ptFrame = av_frame_alloc();
     if(NULL==m_ptFrame)
     {
@@ -187,12 +158,12 @@ int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
 
     if(NULL==m_ptFrame)
     {
-        CODEC_LOGE("NULL==m_ptFrame Decode err \r\n");
+        CODEC_LOGE("AudioDecode NULL==m_ptFrame Decode err \r\n");
         return iRet;
     }
     if(NULL==i_pbFrameData ||NULL==o_ptAVFrame)
     {
-        CODEC_LOGE("NULL==i_pbFrameData ||NULL==o_ptAVFrame err \r\n");
+        CODEC_LOGE("AudioDecode NULL==i_pbFrameData ||NULL==o_ptAVFrame err \r\n");
         return iRet;
     }
     pbFrameData=i_pbFrameData;
@@ -208,63 +179,100 @@ int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
         m_ptPacket->data = pbFrameData;
         m_ptPacket->size = dwFrameLen;
         m_ptPacket->pts = ddwPTS;
-        m_ptPacket->dts = ddwDTS;*/
+        m_ptPacket->dts = ddwDTS;
+        pbFrameData += m_ptPacket->size;
+        dwFrameLen -= m_ptPacket->size;*/
+                
+        //初始化AVPacket对象
+        av_init_packet(m_ptPacket);
         iRet = av_parser_parse2(m_ptParser,m_ptCodecContext, &m_ptPacket->data, &m_ptPacket->size,pbFrameData, dwFrameLen, ddwPTS, ddwDTS, 0);
         if (iRet < 0) 
         {
-            CODEC_LOGE("av_parser_parse2 err \r\n");
+            CODEC_LOGE("AudioDecode av_parser_parse2 err \r\n");
             return iRet;
         }
         pbFrameData += iRet;
         dwFrameLen -= iRet;
         if (m_ptPacket->size<=0)
         {
-            CODEC_LOGE("av_parser_parse2 err m_ptPacket->size<=0\r\n");
+            CODEC_LOGE("AudioDecode av_parser_parse2 err m_ptPacket->size<=0\r\n");
             return iRet;
         }
 
         iRet = avcodec_send_packet(m_ptCodecContext, m_ptPacket);
         if (iRet < 0) 
         {
-            CODEC_LOGE("avcodec_send_packet err \r\n");
+            CODEC_LOGE("AudioDecode avcodec_send_packet err \r\n");
             return iRet;
         }
         while (iRet >= 0) 
         {
             //av_frame_unref(m_ptFrame);//可能输出多帧
-            iRet = avcodec_receive_frame(m_ptCodecContext, m_ptFrame);
+            iRet = avcodec_receive_frame(m_ptCodecContext, m_ptFrame);//不av_frame_unref内部也会初始化
             if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
             {
                 iRet=0;
+                //CODEC_LOGD("iRet %d,,frame->data[0]%d, frame->linesize[0]%d,frame->width%d, frame->height%d \r\n", iRet,m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
                 break;
             }
             else if (iRet < 0) 
             {
-                CODEC_LOGE("avcodec_receive_frame err \r\n");
+                CODEC_LOGE("AudioDecode avcodec_receive_frame err \r\n");
                 av_frame_unref(m_ptFrame);
                 return iRet;
             }
             /* the picture is allocated by the decoder. no need to
                free it */
-            CODEC_LOGD("dec frame %d,frame->data[0]%d, frame->linesize[0]%d,frame->width%d, frame->height%d \r\n", 
-            m_ptCodecContext->frame_number,m_ptFrame->data[0], m_ptFrame->linesize[0],m_ptFrame->width, m_ptFrame->height);
+            CODEC_LOGD("AudioDecode nb_samples %d frame->linesize[0]%d,data[0]%x,width%d, height%d \r\n", m_ptFrame->linesize[0],
+            m_ptFrame->nb_samples,m_ptFrame->data[0],m_ptFrame->width, m_ptFrame->height);
+            /*data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);//ffmepg4.2.1取数据示例
+            if (data_size < 0) {
+                //This should not occur, checking just for paranoia
+                fprintf(stderr, "Failed to calculate data size\n");
+                exit(1);
+            }
+            for (i = 0; i < frame->nb_samples; i++)
+                for (ch = 0; ch < dec_ctx->channels; ch++)
+                    fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);*/
+            if(o_ptAVFrame->nb_samples>0)//nb_samples采样点数量>0
+            {//暂不支持多帧取出，后续o_ptAVFrame优化为数组或者list
+                iRet=0;
+                CODEC_LOGW("AudioDecode already save frame,frame%d->nb_samples%d,width%d, height%d\r\n",m_ptFrame->data[0], m_ptFrame->nb_samples,m_ptFrame->width, m_ptFrame->height);
+                break;
+            }
+            //av_frame_move_ref(o_ptAVFrame,m_ptFrame);//后续下面的操作可以优化为这一个
+            iRet=av_frame_ref(o_ptAVFrame,m_ptFrame);
+            if (iRet < 0)
+            {
+                CODEC_LOGE("AudioDecode av_frame_ref err %d\r\n",iRet);
+                av_frame_unref(m_ptFrame);
+                return iRet;
+            }
+            iRet=av_frame_copy(o_ptAVFrame,m_ptFrame);
+            if (iRet < 0)
+            {
+                CODEC_LOGE("AudioDecode av_frame_copy err %d \r\n",iRet);
+                av_frame_unref(o_ptAVFrame);
+            }
+            av_frame_unref(m_ptFrame);
         }
     }
+    /*
     //av_frame_move_ref(o_ptAVFrame,m_ptFrame);//后续下面的操作可以优化为这一个
     iRet=av_frame_ref(o_ptAVFrame,m_ptFrame);
     if (iRet < 0)
     {
-        CODEC_LOGE("av_frame_ref err \r\n");
+        CODEC_LOGE("Decode av_frame_ref err %d\r\n",iRet);
         av_frame_unref(m_ptFrame);
         return iRet;
     }
     iRet=av_frame_copy(o_ptAVFrame,m_ptFrame);
     if (iRet < 0)
     {
-        CODEC_LOGE("av_frame_copy err \r\n");
+        CODEC_LOGE("Decode av_frame_copy err %d \r\n",iRet);
         av_frame_unref(o_ptAVFrame);
     }
-    av_frame_unref(m_ptFrame);
+    av_frame_unref(m_ptFrame);*/
     return iRet;
 }
 /*****************************************************************************

@@ -12,8 +12,11 @@
 #ifndef AUDIO_DECODE_H
 #define AUDIO_DECODE_H
 
-#include "libavcodec/avcodec.h"
-
+extern "C" {
+#include <libavutil/frame.h>
+#include <libavutil/mem.h>
+#include <libavcodec/avcodec.h>
+}
 
 /*****************************************************************************
 -Class          : AudioDecode
@@ -28,7 +31,7 @@ public:
 	AudioDecode();
 	virtual ~AudioDecode();
     int Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen,int64_t i_ddwPTS,int64_t i_ddwDTS,AVFrame *o_ptAVFrame);
-    int Init(E_CodecType i_eCodecType);
+    int Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels=0);//i_iChannels新版本没用
     int GetCodecContext(AVCodecContext **o_ptCodecContext);
 private:
     int CodecTypeToAvCodecId(E_CodecType eCodecType);

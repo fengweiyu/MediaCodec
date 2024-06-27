@@ -75,15 +75,15 @@ AudioEncode::~AudioEncode()
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int AudioEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int i_iHeight)
+int AudioEncode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels)
 {
     int iRet = -1;
-    AVCodec         *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
+    AVCodec  *ptCodec;//编码器，使用函数avcodec_find_decoder或者，该函数需要的id参数，来自于ptCodecContext中的codec_id成员
     int iCodecID=AV_CODEC_ID_NONE;
     
-    
+    /* Find the encoder to be used by its name. */
     iCodecID=CodecTypeToAvCodecId(i_eCodecType);
-    ptCodec = avcodec_find_decoder(iCodecID);//查找解码器
+    ptCodec = avcodec_find_encoder(iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
         CODEC_LOGE("NULL==ptCodec err \r\n");
@@ -96,73 +96,31 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
         return iRet;
     }
     // Encoder Setting
-    //m_ptCodecContext->bit_rate = 400000;/* put sample parameters */
-    //m_ptCodecContext->codec_id = iCodecID;
-    //m_ptCodecContext->codec_type = AVMEDIA_TYPE_Audio;
-    m_ptCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-    m_ptCodecContext->width = i_iWidth;/* resolution must be a multiple of two */
-    m_ptCodecContext->height = i_iHeight;
-    m_ptCodecContext->me_range = 16;
-    m_ptCodecContext->max_qdiff = 4;
-    /* emit one intra frame every ten frames
-     * check frame pict_type before passing frame
-     * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
-     * then gop_size is ignored and the output of encoder
-     * will always be I frame irrespective to gop_size
+    /* Set the basic encoder parameters.
+     * The input file's sample rate is used to avoid a sample rate conversion.
      */
-    m_ptCodecContext->gop_size = i_iFrameRate;// 每m_fps_帧插入1个I帧
-    // 帧率
-    m_ptCodecContext->framerate = { i_iFrameRate, 1 };/* frames per second */
-    // m_ptCodecContext->time_base = {1, i_iFrameRate};
-    m_ptCodecContext->time_base = { 1, 1000 };//ms
-    // 最大和最小量化系数
-    m_ptCodecContext->qmin = 20;
-    m_ptCodecContext->qmax = 35;
-    m_ptCodecContext->flags |= AV_CODEC_FLAG2_LOCAL_HEADER;
-    // Optional Param
-    m_ptCodecContext->max_b_frames = 0;
-    if (iCodecID == AV_CODEC_ID_H264) 
+    //m_ptCodecContext->channel_layout = av_get_default_channel_layout(i_iChannels);
+    //m_ptCodecContext->channels = i_iChannels;//新版本已经删除
+    //m_ptCodecContext->ch_layout.nb_channels = i_iChannels;//新版本
+    iRet = SelectChannelLayout((const AVCodec *)ptCodec, &m_ptCodecContext->ch_layout);
+    if (iRet < 0)
     {
-        m_ptCodecContext->profile = FF_PROFILE_H264_BASELINE;
-        m_ptCodecContext->level = 31;
-        //m_ptCodecContext->profile = FF_PROFILE_H264_MAIN;
-        //m_ptCodecContext->profile = FF_PROFILE_H264_HIGH;
-        //av_opt_set(m_ptCodecContext->priv_data, "x264-params", "qp=23:crf=32", 0);
-        av_opt_set(m_ptCodecContext->priv_data, "x264-params", "qp=23", 0);
-        //av_opt_set(m_ptCodecContext->priv_data, "qscale", "0", 0);
-    
-        //av_opt_set(m_ptCodecContext->priv_data, "preset", "placebo", 0);
-        //av_opt_set(m_ptCodecContext->priv_data, "preset", "veryslow", 0);
-        av_opt_set(m_ptCodecContext->priv_data, "preset", "slow", 0);
-        av_opt_set(m_ptCodecContext->priv_data, "tune", "zerolatency", 0);
+        CODEC_LOGE("SelectChannelLayout err \r\n");
+        return iRet;
     }
-    else if (iCodecID == AV_CODEC_ID_HEVC) 
+    m_ptCodecContext->sample_rate = i_iSampleRate;
+    if (ptCodec->sample_fmts)
     {
-        // HEVC must be between 0.5 and 1.0.
-        //m_ptCodecContext->qcompress = 0.6;
-        //m_ptCodecContext->profile = FF_PROFILE_HEVC_MAIN;
-        //av_opt_set(m_ptCodecContext->priv_data, "x265-params", "qp=31", 0);
-        //av_opt_set(m_ptCodecContext->priv_data, "preset", "ultrafast", 0);
-        //av_opt_set(m_ptCodecContext->priv_data, "tune", "zero-latency", 0);
-        int iQp = 27;
-        int iGop = 2;
-        m_ptCodecContext->profile = FF_PROFILE_HEVC_MAIN;
-        av_opt_set(m_ptCodecContext->priv_data, "preset", "ultrafast", 0); ///< 暂不支持其他预置方式  szPreSet.c_str()
-        av_opt_set(m_ptCodecContext->priv_data, "tune", "zero-latency", 0);
-        char strX265Params[1024];
-        snprintf(strX265Params, sizeof(strX265Params),
-            "scenecut-bias=0:ipratio=1:qp=%d:psy-rd=0.0:merge=0:wpp=0:"
-            "rskip=0:lookahead-slices=0:pmode=0:pme=0:temporal-mvp=0:"
-            "strong-intra-smoothing=0:min-cu-size=8:max-merge=3:me=1:"
-            "subme=2:sao=1:rd=3:selective-sao=4:rskip=1:fast-intra=0:"
-            "b-intra=1:fps=%d/1:keyint=%d:min-keyint=2",
-            iQp, i_iFrameRate, i_iFrameRate * iGop);
-        av_opt_set(m_ptCodecContext->priv_data, "x265-params", strX265Params, 0);
+        m_ptCodecContext->sample_fmt = ptCodec->sample_fmts[0];
     }
-    /* open it */
-    if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
-    {//打开解码器
-        CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name(iCodecID));
+    m_ptCodecContext->time_base = { 1, 1000 };
+    // m_ptCodecContext->bit_rate = bit_rate;
+
+    /* Open the encoder for the audio stream to use it later. */
+    if ((iRet = avcodec_open2(m_ptCodecContext, ptCodec, NULL)) < 0) 
+    {
+        CODEC_LOGE("Could not open codec\n");
+        //avcodec_free_context(&m_ptCodecContext);//析构会统一释放
         return iRet;
     }
 
@@ -186,29 +144,29 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType)
+int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int64_t *o_ddwPTS)
 {
     int iRet = -1;
     int iFrameRate = 0;
+    int iFrameLen = 0;
+
 
     if(NULL==m_ptPacket)
     {
-        CODEC_LOGE("NULL==m_ptPacket Encode err \r\n");
+        CODEC_LOGE("NULL==m_ptPacket AudioEncode err \r\n");
         return iRet;
     }
-    if(NULL==i_ptAVFrame ||NULL==o_pbFrameData ||NULL==o_iFrameRate ||NULL==o_iFrameType)
+    if(NULL==i_ptAVFrame ||NULL==o_pbFrameData ||NULL== o_ddwPTS)
     {
-        CODEC_LOGE("NULL==o_pbFrameData ||NULL==o_iFrameRate err \r\n");
+        CODEC_LOGE("AudioEncode NULL==o_pbFrameData ||NULL==o_ddwPTS err \r\n");
         return iRet;
     }
-    i_ptAVFrame->pts = i_ptAVFrame->best_effort_timestamp;
-    i_ptAVFrame->pts = av_rescale_q(i_ptAVFrame->pts, {1, 1000}, m_ptCodecContext->time_base);// 时间戳转换
-
-    i_ptAVFrame->pict_type = AV_PICTURE_TYPE_NONE;//
+    
+    //i_ptAVFrame->pts = i_ptAVFrame->best_effort_timestamp;//重采样处理内部已经赋值过
     iRet = avcodec_send_frame(m_ptCodecContext, i_ptAVFrame);
     if (iRet < 0) 
     {
-        CODEC_LOGE("Error sending a frame for encoding\n");
+        CODEC_LOGE("AudioEncode Error sending a frame for encoding\n");
         return iRet;
     }
     while (iRet >= 0) 
@@ -216,19 +174,48 @@ int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         iRet = avcodec_receive_packet(m_ptCodecContext, m_ptPacket);
         if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
         {
-            iRet=0;
+            iRet=iFrameLen;
+            //CODEC_LOGD("iRet == AVERROR_EOF %lld,size %d, data%p %d\r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data,m_ptPacket->flags);
             break;
         }
         else if (iRet < 0) 
         {
-            CODEC_LOGE("avcodec_receive_packet err \r\n");
+            CODEC_LOGE("AudioEncode avcodec_receive_packet err \r\n");
             av_packet_unref(m_ptPacket);
             return iRet;
         }
-        CODEC_LOGD("enc packet %lld,size %d, data%p \r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data, m_ptPacket->size);
+        CODEC_LOGD("AudioEncode enc packet %lld,size %d, data%p \r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data, m_ptPacket->size);
         //av_packet_unref(m_ptPacket);
+        if(iFrameLen>0)
+        {//暂不支持多帧取出，后续优化为数组或者list
+            CODEC_LOGW("AudioEncode already save frame,iFrameLen%d\r\n",iFrameLen);
+        }
+        if(m_ptPacket->size <= 0 ||m_ptPacket->size>i_dwFrameMaxLen-iFrameLen)
+        {
+            CODEC_LOGE("AudioEncode m_ptPacket->size%d>i_dwFrameMaxLen%d -iFrameLen%d err \r\n",m_ptPacket->size,i_dwFrameMaxLen,iFrameLen);
+            av_packet_unref(m_ptPacket);
+            return -1;
+        }
+        m_ptPacket->pts = i_ptAVFrame->pts;
+        if (AV_CODEC_ID_AAC==m_ptCodecContext->codec_id) 
+        {
+            unsigned char bDataBuf[7];
+            memset(bDataBuf,0,sizeof(bDataBuf));
+            iRet=GenerateAdtsHeader(bDataBuf,7,m_ptCodecContext->sample_rate,m_ptCodecContext->ch_layout.nb_channels, m_ptPacket->size);
+            if(iRet>0)
+            {
+                memcpy(o_pbFrameData+iFrameLen,bDataBuf,iRet);
+                iFrameLen+=iRet;
+            }
+        }
+        memcpy(o_pbFrameData+iFrameLen,m_ptPacket->data,m_ptPacket->size);
+        iFrameLen+=m_ptPacket->size;
+        *o_ddwPTS=m_ptPacket->pts;
+        iRet=iFrameLen;
+        
+        av_packet_unref(m_ptPacket);
     }
-    if(m_ptPacket->size>i_dwFrameMaxLen)
+    /*if(m_ptPacket->size>i_dwFrameMaxLen)
     {
         CODEC_LOGE("m_ptPacket->size%d>i_dwFrameMaxLen%d err \r\n",m_ptPacket->size,i_dwFrameMaxLen);
         av_packet_unref(m_ptPacket);
@@ -248,8 +235,30 @@ int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         memcpy(o_pbFrameData,m_ptPacket->data,m_ptPacket->size);
         iRet=m_ptPacket->size;
     }
-    av_packet_unref(m_ptPacket);
+    av_packet_unref(m_ptPacket);*/
     return iRet;
+}
+/*****************************************************************************
+-Fuction        : GetCodecContext
+-Description    : GetCodecContext
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2023/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioEncode::GetCodecContext(AVCodecContext **o_ptCodecContext)
+{
+    int iRet = -1;
+
+    if(NULL==m_ptPacket)
+    {
+        CODEC_LOGE("NULL==m_ptPacket GetCodecContext err \r\n");
+        return iRet;
+    }
+    *o_ptCodecContext=m_ptCodecContext;
+    return 0;
 }
 
 /*****************************************************************************
@@ -285,4 +294,115 @@ int AudioEncode::CodecTypeToAvCodecId(E_CodecType eCodecType)
     }
 }
 
+/*****************************************************************************
+-Fuction        : SelectChannelLayout
+-Description    : 
+select layout with the highest channel count 
+from ffmpeg select_channel_layout
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2023/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst)
+{
+    const AVChannelLayout *p, *best_ch_layout;
+    int best_nb_channels   = 0;
+
+    if (!codec->ch_layouts)
+        return av_channel_layout_copy(dst, &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO);
+
+    p = codec->ch_layouts;
+    while (p->nb_channels) {
+        int nb_channels = p->nb_channels;
+
+        if (nb_channels > best_nb_channels) {
+            best_ch_layout   = p;
+            best_nb_channels = nb_channels;
+        }
+        p++;
+    }
+    return av_channel_layout_copy(dst, best_ch_layout);
+}
+
+
+/*****************************************************************************
+-Fuction        : GenerateAdtsHeader
+-Description    : 
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2023/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioEncode::GenerateAdtsHeader(unsigned char * o_pbData,int i_iMaxDataLen,int i_iSampleRate,int i_iChannels,int i_iPayloadLen) 
+{
+    int iRet = -1;
+    unsigned char bDataBuf[7];
+    int iLen = i_iPayloadLen + 7;
+
+    if (NULL == o_pbData || i_iMaxDataLen < 7) 
+    {
+        CODEC_LOGE("NULL==o_pbData err%d \r\n",i_iMaxDataLen);
+        return iRet;
+    }
+
+    int iSampleIndex = 0x04;
+    switch (i_iSampleRate) 
+    {
+        case 96000:
+            iSampleIndex = 0x00;
+            break;
+        case 88200:
+            iSampleIndex = 0x01;
+            break;
+        case 64000:
+            iSampleIndex = 0x02;
+            break;
+        case 48000:
+            iSampleIndex = 0x03;
+            break;
+        case 44100:
+            iSampleIndex = 0x04;
+            break;
+        case 32000:
+            iSampleIndex = 0x05;
+            break;
+        case 24000:
+            iSampleIndex = 0x06;
+            break;
+        case 22050:
+            iSampleIndex = 0x07;
+            break;
+        case 16000:
+            iSampleIndex = 0x08;
+            break;
+        case 12000:
+            iSampleIndex = 0x09;
+            break;
+        case 11025:
+            iSampleIndex = 0x0a;
+            break;
+        case 8000:
+            iSampleIndex = 0x0b;
+            break;
+        case 7350:
+            iSampleIndex = 0x0c;
+            break;
+    }
+
+    bDataBuf[0] = 0xFF;
+    bDataBuf[1] = 0xF1;
+    bDataBuf[2] = 0x40 | (iSampleIndex << 2) | (i_iChannels >> 2);
+    bDataBuf[3] = ((i_iChannels & 0x03) << 6) | (iLen >> 11);
+    bDataBuf[4] = (iLen >> 3) & 0xFF;
+    bDataBuf[5] = ((iLen << 5) & 0xFF) | 0x1F;
+    bDataBuf[6] = 0xFC;
+
+    memcpy(o_pbData,bDataBuf,sizeof(bDataBuf));
+    return 7;
+}
 
