@@ -125,7 +125,9 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     //m_ptCodecContext->framerate = { 0, 1 };
     m_ptCodecContext->time_base = { 1, 1000 };//设置时间(基)以ms为单位
     //m_ptCodecContext->skip_frame = AVDISCARD_NONREF; // 跳过非参考帧
+    //错误检测,丢掉有问题的帧, 防止一两个有问题的帧导致后面帧的编解码一直有问题(部分绿屏)
     //m_ptCodecContext->err_recognition = AV_EF_CRCCHECK | AV_EF_BITSTREAM | AV_EF_EXPLODE | AV_EF_COMPLIANT;
+    m_ptCodecContext->err_recognition |= (AV_EF_CRCCHECK | AV_EF_EXPLODE | AV_EF_BITSTREAM | AV_EF_BUFFER | AV_EF_CAREFUL | AV_EF_COMPLIANT | AV_EF_AGGRESSIVE);
     if (iCodecID == AV_CODEC_ID_MJPEG) 
     {
         //m_ptCodecContext->gop_size = i_fps;
