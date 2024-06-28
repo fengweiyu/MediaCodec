@@ -82,7 +82,8 @@ typedef struct CodecFrame
     unsigned int dwWidth;//
     unsigned int dwHeight;//
     unsigned int dwChannels;//音频通道个数
-    int iAudioFrameSize;//音频数据每帧固定长度大小,比如pcma 8000采样率的是160
+    //如果不设置则使用转码后的格式需要多少采样就用多少,如果转码后的格式对采样数没要求，则解码出多少采样就使用多少采样
+    int iAudioFrameSize;//音频数据每帧固定长度大小,比如8000采样率的pcma 固定长度是160。
 
 	//输出1帧数据结果(目前用不上，可删除)
     //unsigned char *pbFrameStartPos;//包含00 00 00 01
