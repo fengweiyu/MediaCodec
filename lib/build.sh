@@ -44,6 +44,16 @@ function BuildLib()
     fi  
     mkdir $OutputPath
     
+    x265Name="x265_2.7"
+    if [ -e "$x265Name" ]; then
+        rm $x265Name -rf
+    fi  
+    tar -xf $x265Name.tar.gz
+    x264Name="x264-stable"
+    if [ -e "$x264Name" ]; then
+        rm $x264Name -rf
+    fi  
+    tar -xf $x264Name.tar.gz
     freetypeName="freetype-2.13.2"
     if [ -e "$freetypeName" ]; then
         rm $freetypeName -rf
@@ -59,16 +69,6 @@ function BuildLib()
         rm $aacName -rf
     fi  
     tar -xf $aacName.tar.gz
-    x264Name="x264-stable"
-    if [ -e "$x264Name" ]; then
-        rm $x264Name -rf
-    fi  
-    tar -xf $x264Name.tar.gz
-    x265Name="x265_2.7"
-    if [ -e "$x265Name" ]; then
-        rm $x265Name -rf
-    fi  
-    tar -xf $x265Name.tar.gz
     ffmpegName="ffmpeg-7.0.1"
     if [ -e "$ffmpegName" ]; then
         rm $ffmpegName -rf
@@ -87,6 +87,16 @@ function BuildLib()
     tar -xf $fontconfigName.tar.gz
     
     
+    cd $x265Name/build/linux
+#   cmake -DCMAKE_TOOLCHAIN_FILE=crosscompile.cmake -G "Unix Makefiles" ../../source && ccmake ../../source #cmake过程中提示界面依次输入c e g即可安装到指定目录
+    cmake -DCMAKE_INSTALL_PREFIX=$OutputPath/$x265Name -G "Unix Makefiles" ../../source && ccmake ../../source
+    make -j4;make install
+    cd -
+    cd $x264Name
+#   ./configure  --host=aarch64-apple-darwin --prefix=/opt/local --enable-shared --enable-static --disable-asm 
+    ./configure --prefix=$OutputPath/$x264Name --enable-shared --enable-static
+    make -j4;make install
+    cd -
     
     cd $freetypeName
     ./configure --prefix=$OutputPath/$freetypeName
@@ -102,16 +112,6 @@ function BuildLib()
 #    cp ./src/hb-ft.h $OutputPath/$harfbuzzName/include/harfbuzz  #因为其不会主动安装这个头文件，ffmpeg又需要，所以暂时这么拷贝
     cd $CurPwd
 
-    cd $x264Name
-#   ./configure  --host=aarch64-apple-darwin --prefix=/opt/local --enable-shared --enable-static --disable-asm
-    ./configure --prefix=$OutputPath/$x264Name --enable-shared --enable-static --disable-asm
-    make -j4;make install
-    cd -
-    cd $x265Name/build/linux
-#   cmake -DCMAKE_TOOLCHAIN_FILE=crosscompile.cmake -G "Unix Makefiles" ../../source && ccmake ../../source #cmake过程中提示界面依次输入c e g即可安装到指定目录
-    cmake -DCMAKE_INSTALL_PREFIX=$OutputPath/$x265Name -G "Unix Makefiles" ../../source && ccmake ../../source
-    make -j4;make install
-    cd -
 #COMMENT
     #x264库所在的位置，ffmpeg 需要链接 x264
     x264LIB_DIR=$OutputPath/$x264Name
@@ -145,8 +145,9 @@ function BuildLib()
     ADD_FEATURE="--enable-static --enable-shared --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libfreetype --enable-libharfbuzz --enable-libfontconfig --enable-nonfree --enable-libfdk-aac" #--extra-cflags=-I$x264INC -I$x265INC --extra-ldflags=-L$x264LIB -L$x265LIB" 有pkgconfig就暂不需要指定
 #./configure --prefix=/mnt/d/linuxCode/third/ffmpegmsvc --target-os=win64 --arch=x86_64 --enable-shared --toolchain=msvc --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi
 #./configure --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi #--pkg-config="pkg-config --static"
-#./configure --prefix=/mnt/d/linuxCode/third/ffmpeglinux --arch=x86_64 --enable-static --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi
-    ./configure --prefix=$OutputPath/$ffmpegName --pkg-config-flags="--static" --arch=x86_64 --disable-x86asm $ADD_FEATURE 
+#NASM 是 x86 平台汇编器，不需要交叉编译。若是 arm 等其他平台，交叉编译工具链中包含有对应的汇编器，则交叉编译 ffmpeg 时需要 --disable-x86asm 选项
+#./configure --prefix=/mnt/d/linuxCode/third/ffmpeglinux --arch=x86_64 --enable-static --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi --disable-x86asm asm汇编加速 会导致scale滤镜花屏(ffmpeg 5.0以前的版本不会,编译要装nasm,否则编译不过,最终链接的程序不需要链接asm库 即无需交叉编译asm库)
+    ./configure --prefix=$OutputPath/$ffmpegName --pkg-config-flags="--static" --arch=x86_64 $ADD_FEATURE 
     make -j4;make install
     cd -
     
