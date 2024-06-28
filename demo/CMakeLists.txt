@@ -43,6 +43,7 @@ TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAK
 
 TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/ThirdLib/libfontconfig/lib/libfontconfig.a)
 TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/ThirdLib/libxml2/lib/libxml2.a)
+TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/ThirdLib/harfbuzz/lib/libharfbuzz.a)
 TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/ThirdLib/freetype/lib/libfreetype.a)
 
 TARGET_LINK_LIBRARIES(MediaTranscode -pthread -ldl -lz -static)
