@@ -106,12 +106,16 @@ function CopyLib()
     
     mkdir freetype
     mkdir freetype/lib
+    mkdir harfbuzz
+    mkdir harfbuzz/lib
     mkdir libxml2
     mkdir libxml2/lib
     mkdir libfontconfig
     mkdir libfontconfig/lib
     cp $CurPwd/../lib/linux/$2/freetype-2.13.2/lib/*.a $1/ThirdLib/freetype/lib -rf
     cp $CurPwd/../lib/linux/$2/freetype-2.13.2/include $1/ThirdLib/freetype -rf
+    cp $CurPwd/../lib/linux/$2/harfbuzz-8.5.0/lib/*.a $1/ThirdLib/harfbuzz/lib -rf
+    cp $CurPwd/../lib/linux/$2/harfbuzz-8.5.0/include $1/ThirdLib/harfbuzz -rf
     cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/lib/*.a $1/ThirdLib/libxml2/lib -rf
     cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/include $1/ThirdLib/libxml2 -rf
     cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/lib/*.a $1/ThirdLib/libfontconfig/lib -rf
