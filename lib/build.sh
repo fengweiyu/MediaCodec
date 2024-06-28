@@ -49,6 +49,11 @@ function BuildLib()
         rm $freetypeName -rf
     fi  
     tar -xf $freetypeName.tar.gz
+    harfbuzzName="harfbuzz-8.5.0"
+    if [ -e "$harfbuzzName" ]; then
+        rm $harfbuzzName -rf
+    fi  
+    tar -xf $harfbuzzName.tar.xz
     aacName="fdk-aac-2.0.3"
     if [ -e "$aacName" ]; then
         rm $aacName -rf
@@ -87,6 +92,16 @@ function BuildLib()
     ./configure --prefix=$OutputPath/$freetypeName
     make -j4;make install
     cd -
+    cd $harfbuzzName
+    sh autogen.sh 
+#   ./configure --prefix=/mnt/d/linuxCode/third/MediaCodec/lib/linux --host=aarch64-linux-gnu --enable-shared CC=aarch64-linux-gnu-gcc --with-glib=no --with-cairo=no --with-chafa=no --with-icu=no --with-freetype=no
+    ./configure --prefix=$OutputPath/$harfbuzzName --enable-static --with-glib=no --with-cairo=no --with-chafa=no --with-icu=no --with-freetype=yes FREETYPE_CFLAGS=-I$OutputPath/$freetypeName/include/freetype2 FREETYPE_LIBS="-L$OutputPath/$freetypeName/lib -lfreetype"
+#    mkdir build;cd build
+#    cmake -DCMAKE_INSTALL_PREFIX=$OutputPath/$harfbuzzName ..
+    make -j4;make install
+#    cp ./src/hb-ft.h $OutputPath/$harfbuzzName/include/harfbuzz  #因为其不会主动安装这个头文件，ffmpeg又需要，所以暂时这么拷贝
+    cd $CurPwd
+
     cd $x264Name
 #   ./configure  --host=aarch64-apple-darwin --prefix=/opt/local --enable-shared --enable-static --disable-asm
     ./configure --prefix=$OutputPath/$x264Name --enable-shared --enable-static --disable-asm
@@ -124,10 +139,10 @@ function BuildLib()
     ./configure --prefix=$OutputPath/$aacName
     make -j4;make install
     cd -
-    export PKG_CONFIG_PATH=$OutputPath/$fontconfigName/lib/pkgconfig:$OutputPath/$aacName/lib/pkgconfig:$freetypeLIB/pkgconfig:$x264LIB/pkgconfig:$x265LIB/pkgconfig:$PKG_CONFIG_PATH #找到 x264 库的 pkg-config 文件
+    export PKG_CONFIG_PATH=$OutputPath/$fontconfigName/lib/pkgconfig:$OutputPath/$aacName/lib/pkgconfig:$OutputPath/$harfbuzzName/lib/pkgconfig:$freetypeLIB/pkgconfig:$x264LIB/pkgconfig:$x265LIB/pkgconfig:$PKG_CONFIG_PATH #找到 x264 库的 pkg-config 文件
     cd $ffmpegName
-    #--enable-vaapi 后续支持vaapi(封装底层显卡编解码库的硬件加速库，例如win端的d3dxl)，ERROR: vaapi requested but not found如果想要使用drawtext，编译时需要加上--enable-libfreetype。要选择多种字体，需要加上--enable-libfontconfig。还需要字体变形，需要加上--enable-libfribidi
-    ADD_FEATURE="--enable-static --enable-shared --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libfreetype --enable-libfontconfig --enable-nonfree --enable-libfdk-aac" #--extra-cflags=-I$x264INC -I$x265INC --extra-ldflags=-L$x264LIB -L$x265LIB" 有pkgconfig就暂不需要指定
+    #--enable-vaapi 后续支持vaapi(封装底层显卡编解码库的硬件加速库，例如win端的d3dxl)，ERROR: vaapi requested but not found如果想要使用drawtext，编译时需要加上--enable-libfreetype -enable-libharfbuzz。要选择多种字体，需要加上--enable-libfontconfig。还需要字体变形，需要加上--enable-libfribidi
+    ADD_FEATURE="--enable-static --enable-shared --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libfreetype --enable-libharfbuzz --enable-libfontconfig --enable-nonfree --enable-libfdk-aac" #--extra-cflags=-I$x264INC -I$x265INC --extra-ldflags=-L$x264LIB -L$x265LIB" 有pkgconfig就暂不需要指定
 #./configure --prefix=/mnt/d/linuxCode/third/ffmpegmsvc --target-os=win64 --arch=x86_64 --enable-shared --toolchain=msvc --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi
 #./configure --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi #--pkg-config="pkg-config --static"
 #./configure --prefix=/mnt/d/linuxCode/third/ffmpeglinux --arch=x86_64 --enable-static --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi
