@@ -120,7 +120,7 @@ function CopyLib()
     cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/include $1/ThirdLib/libxml2 -rf
     cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/lib/*.a $1/ThirdLib/libfontconfig/lib -rf
     cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/include $1/ThirdLib/libfontconfig -rf
-    
+    cp $CurPwd/../lib/msyh.ttf $1
     cd $CurPwd
 }
 
