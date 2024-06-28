@@ -130,8 +130,8 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         //drawtext=fnotallow=FreeSans.ttf:fnotallow=green:fnotallow=25:x=50:y=20:text= ///path/to/msyh.ttf 
         //drawtext=fontfile=msyhbd.ttc:fontcolor=red:fontsize=25:x=50:y=20:text=
         //-vf drawtext=fontcolor=white:fontsize=40:fontfile=msyh.ttf:text='Hello World':x=0:y=100
-        //drawtext=fontfile=msyh.ttf:fontcolor=white:fontsize=25:x=50:y=20:text=
-        snprintf(strTemp,sizeof(strTemp),"drawtext=fontfile=msyh.ttf:fontcolor=white:fontsize=25:x=50:y=20:text=\"%s\"",strBuffer);//asctime(timeinfo)
+        //drawtext=fontfile=msyh.ttf:fontcolor=white:fontsize=25:x=50:y=20:text=\"%s\"
+        snprintf(strTemp,sizeof(strTemp),"scale=%d:%d,drawtext=fontfile=msyh.ttf:fontcolor=white:fontsize=20:x=20:y=20:text=%s",o_pDstFrame->dwWidth,o_pDstFrame->dwHeight,strBuffer);//asctime(timeinfo)
         CODEC_LOGE("RawHandle:%s \r\n",strTemp);
         iRet=m_pVideoRawHandle->Init(ptCodecContext,strTemp);
     }
