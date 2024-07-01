@@ -31,16 +31,21 @@ int main(int argc, char* argv[])
 {
     MediaTranscodeDemo oMediaTranscodeDemo;
 
-    if(argc !=3)
+    if(argc ==2)
     {
-        PrintUsage(argv[0]);
-        return oMediaTranscodeDemo.proc("demo.h264","demo.h265");
+        return oMediaTranscodeDemo.proc(argv[1]);//Transcode(argv[1],argv[2],NULL,NULL)
     }
-    return oMediaTranscodeDemo.proc(argv[1],argv[2]);
+    if(argc ==3)
+    {
+        return oMediaTranscodeDemo.Transcode(argv[1],argv[2]);//Transcode(argv[1],argv[2],NULL,NULL)
+    }
+    PrintUsage(argv[0]);
+    return oMediaTranscodeDemo.proc("demo.json");//oMediaTranscodeDemo.proc("demo.h264","demo.h265");
 }
 /*****************************************************************************
 -Fuction        : PrintUsage
--Description    : PrintUsage
+-Description    : 
+printf("run default args: %s demo.h264 demo.h265\r\n",i_strProcName);
 -Input          : 
 -Output         : 
 -Return         : 
@@ -50,8 +55,9 @@ int main(int argc, char* argv[])
 ******************************************************************************/
 static void PrintUsage(char *i_strProcName)
 {
+    printf("Usage: %s file.json or\r\n",i_strProcName);
     printf("Usage: %s inputFile outputFile\r\n",i_strProcName);
     //printf("eg: %s 9112 77.72.169.210 3478\r\n",i_strProcName);
-    printf("run default args: %s demo.h264 demo.h265\r\n",i_strProcName);
+    printf("run default args: %s demo.json\r\n",i_strProcName);
 }
 

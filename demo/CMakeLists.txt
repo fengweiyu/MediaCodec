@@ -21,11 +21,13 @@ SET(src_list
 	)		
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/media/include
+    ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/json/cJSON
     ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/lib/include
     ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/ThirdLib/ffmpeg/include
 	)
 ADD_EXECUTABLE(MediaTranscode ${src_list})
 TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/media/lib/libmedia.a)
+TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/json/cJSON/libcjson.a)
 TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/lib/libMediaTranscode.a)
 
 TARGET_LINK_LIBRARIES(MediaTranscode ${PROJECT_SOURCE_DIR}/../build/linux/${CMAKE_ToolChain}/ThirdLib/ffmpeg/lib/libavfilter.a)

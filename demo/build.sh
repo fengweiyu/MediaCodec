@@ -85,6 +85,12 @@ else
     fi
     cd ..
     
+    cd json
+    sh build.sh $1 $2
+    if [ $? -ne 0 ]; then
+        exit -1
+    fi
+    cd ..
     BuildExe $1
     CopyExe $2
 fi
