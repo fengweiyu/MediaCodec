@@ -26,7 +26,7 @@ function BuildLib()
 {
     echo -e "Start building cJSON..."
     CurPwd=$PWD
-    OutputPath="$PWD/cJSON-1.7.12/build"
+    OutputPath="$PWD/cJSON-1.7.12"
     if [ -e "$OutputPath" ]; then
         rm $OutputPath -rf
 #防止切换平台编译时由于平台不对应报错，所以删除build重新建立       
@@ -39,16 +39,17 @@ function BuildLib()
 #       mkdir $OutputPath
 #       mkdir $OutputPath/lib
     fi  
-    mkdir $OutputPath
+    tar -xf cJSON_v1.7.12.tar.gz
+    mkdir $OutputPath/build
 
-    cd $OutputPath
+    cd $OutputPath/build
     cmakeOption=-DBUILD_SHARED_AND_STATIC_LIBS=ON
     if [ $1 == x86 -o $1 == x64 ]; then
         cmakeOption=-DBUILD_SHARED_AND_STATIC_LIBS=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
     else
         cmakeOption=-DBUILD_SHARED_AND_STATIC_LIBS=ON -DCMAKE_C_COMPILER=$1-gcc -DCMAKE_CXX_COMPILER=$1-g++
     fi
-    cmake $cmakeOption -DCMAKE_INSTALL_PREFIX=$OutputPath/install ..
+    cmake $cmakeOption -DCMAKE_INSTALL_PREFIX=$OutputPath/build/install ..
     if [ -e "Makefile" ]; then  
         make clean
         make -j4;make install
