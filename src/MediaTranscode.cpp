@@ -129,6 +129,6 @@ int MediaTranscode::GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFr
         return iRet;
     }
 
-    return iRet;
+    return 0;
 }
 
