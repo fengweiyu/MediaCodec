@@ -32,7 +32,8 @@ public:
     int proc(const char * i_strJsonFileName);
     int Transcode(const char * i_strSrcFileName,const char * i_strDstFileName,T_CodecFrame *i_ptVideoSrcFrame=NULL,T_CodecFrame *i_ptAudioSrcFrame=NULL,T_CodecFrame *i_ptVideoDstFrame=NULL,T_CodecFrame *i_ptAudioDstFrame=NULL);
 private:
-    int SaveDstFrame(T_CodecFrame * i_ptCodecFrame,MediaHandle *i_pMediaHandle,unsigned char *o_pbBuf,int i_iMaxLen);
+    E_StreamType GetStreamType(const char *i_strFileName);
+    int SaveDstFrame(T_CodecFrame * i_ptCodecFrame,MediaHandle *i_pMediaHandle,E_StreamType i_eStreamType,unsigned char *o_pbBuf,int i_iMaxLen);
     int CodecFrameToMediaFrame(T_CodecFrame * i_ptCodecFrame,T_MediaFrameInfo * m_ptMediaFrame);
     int MediaFrameToCodecFrame(T_MediaFrameInfo * i_ptMediaFrame,T_CodecFrame * i_ptCodecFrame);
     int CreateCodecFrameDefault(const char * i_strDstFileName,unsigned char *pbCodecBuf,int iCodecBufMaxLen,T_CodecFrame * i_ptCodecFrame);

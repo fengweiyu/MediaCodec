@@ -120,6 +120,7 @@ int MediaTranscodeDemo :: proc(const char * i_strJsonFileName)
     {
         fclose(pJsonFile);//fseek(m_pMediaFile,0,SEEK_SET); 
     } 
+    return iRet;
 }
 
 /*****************************************************************************
@@ -143,8 +144,8 @@ int MediaTranscodeDemo :: Transcode(const char * i_strSrcFileName,const char * i
     MediaHandle oOutMediaHandle;
 	FILE  *pMediaFile=NULL;
     T_CodecFrame tSrcFrame,tDstFrame;
-    T_CodecFrame *i_ptSrcFrame=NULL;
-    T_CodecFrame *i_ptDstFrame=NULL;
+    T_CodecFrame *ptSrcFrame=NULL;
+    T_CodecFrame *ptDstFrame=NULL;
     
     if(NULL== i_strSrcFileName ||NULL== i_strDstFileName)
     {
@@ -195,15 +196,15 @@ int MediaTranscodeDemo :: Transcode(const char * i_strSrcFileName,const char * i
             
             if(tFileFrameInfo.eFrameType == MEDIA_FRAME_TYPE_AUDIO_FRAME)
             {
-                i_ptSrcFrame=i_ptAudioSrcFrame;
-                i_ptDstFrame=i_ptAudioDstFrame;
+                ptSrcFrame=i_ptAudioSrcFrame;
+                ptDstFrame=i_ptAudioDstFrame;
             } 
             else
             {
-                i_ptSrcFrame=i_ptVideoSrcFrame;
-                i_ptDstFrame=i_ptVideoDstFrame;
+                ptSrcFrame=i_ptVideoSrcFrame;
+                ptDstFrame=i_ptVideoDstFrame;
             }
-            if(NULL == i_ptDstFrame)
+            if(NULL == ptDstFrame)
             {
                 memset(&tDstFrame,0,sizeof(T_CodecFrame));
                 CreateCodecFrameDefault(i_strDstFileName,pbFileBuf, MEDIA_TRANS_FRAME_BUF_MAX_LEN,&tDstFrame);
@@ -211,17 +212,17 @@ int MediaTranscodeDemo :: Transcode(const char * i_strSrcFileName,const char * i
             else
             {
                 memset(&tDstFrame,0,sizeof(T_CodecFrame));
-                memcpy(&tDstFrame,i_ptDstFrame,sizeof(T_CodecFrame));
+                memcpy(&tDstFrame,ptDstFrame,sizeof(T_CodecFrame));
                 tDstFrame.pbFrameBuf=pbFileBuf;
                 tDstFrame.iFrameBufMaxLen=MEDIA_TRANS_FRAME_BUF_MAX_LEN;
             }
-            if(NULL != i_ptSrcFrame)
+            if(NULL != ptSrcFrame)
             {
                 memset(&tSrcFrame,0,sizeof(T_CodecFrame));
-                memcpy(&tSrcFrame,i_ptSrcFrame,sizeof(T_CodecFrame));
+                memcpy(&tSrcFrame,ptSrcFrame,sizeof(T_CodecFrame));
             } 
 
-
+            //CODEC_LOGD("oMediaTranscodeInf.Transform eEncType %d\r\n",tDstFrame.eEncType);
             MediaFrameToCodecFrame(&tFileFrameInfo, &tSrcFrame);
             iRet =oMediaTranscodeInf.Transform(&tSrcFrame, &tDstFrame);
             if(iRet < 0)
@@ -231,16 +232,23 @@ int MediaTranscodeDemo :: Transcode(const char * i_strSrcFileName,const char * i
             } 
             do
             {
-                iWriteLen = SaveDstFrame(&tDstFrame,&oOutMediaHandle,pbOutFileBuf,MEDIA_TRANS_FRAME_BUF_MAX_LEN);
+                if(tDstFrame.iFrameBufLen == 0)
+                {
+                    CODEC_LOGW("tDstFrame.iFrameBufLen == 0 %s\r\n",i_strDstFileName);
+                    break;
+                } 
+                iWriteLen = SaveDstFrame(&tDstFrame,&oOutMediaHandle,GetStreamType(i_strDstFileName),pbOutFileBuf,MEDIA_TRANS_FRAME_BUF_MAX_LEN);
                 if(iWriteLen <= 0)
                 {
                     CODEC_LOGE("SaveDstFrame err %s\r\n",i_strDstFileName);
+                    iRet=-1;
                     break;
                 } 
                 iRet = fwrite(pbOutFileBuf,1,iWriteLen,pMediaFile);
                 if(iRet != iWriteLen)
                 {
                     CODEC_LOGE("fwrite err %d iWriteLen%d\r\n",iRet,iWriteLen);
+                    iRet=-1;
                     break;
                 }
                 
@@ -291,9 +299,9 @@ int MediaTranscodeDemo :: Transcode(const char * i_strSrcFileName,const char * i
 * -----------------------------------------------
 * 2023/10/10	  V1.0.0		 Yu Weifeng 	  Created
 ******************************************************************************/
-int MediaTranscodeDemo :: SaveDstFrame(T_CodecFrame * i_ptCodecFrame,MediaHandle *i_pMediaHandle,unsigned char *o_pbBuf,int i_iMaxLen)
+int MediaTranscodeDemo :: SaveDstFrame(T_CodecFrame * i_ptCodecFrame,MediaHandle *i_pMediaHandle,E_StreamType i_eStreamType,unsigned char *o_pbBuf,int i_iMaxLen)
 {
-    int iRet = -1,iWriteLen;
+    int iRet = -1,iHeaderLen;
     T_MediaFrameInfo tMediaFrame;
 
     if(NULL== i_ptCodecFrame || NULL== o_pbBuf || NULL== i_pMediaHandle)
@@ -313,7 +321,51 @@ int MediaTranscodeDemo :: SaveDstFrame(T_CodecFrame * i_ptCodecFrame,MediaHandle
         return iRet;
     } 
 
-    return i_pMediaHandle->FrameToContainer(&tMediaFrame,STREAM_TYPE_ENHANCED_FLV_STREAM,o_pbBuf,(unsigned int)i_iMaxLen);
+    return i_pMediaHandle->FrameToContainer(&tMediaFrame,i_eStreamType,o_pbBuf,(unsigned int)i_iMaxLen,&iHeaderLen);
+}
+
+/*****************************************************************************
+-Fuction		: GetStreamType
+-Description	: GetStreamType
+-Input			: 
+-Output 		: 
+-Return 		: 
+* Modify Date	  Version		 Author 		  Modification
+* -----------------------------------------------
+* 2023/10/10	  V1.0.0		 Yu Weifeng 	  Created
+******************************************************************************/
+E_StreamType MediaTranscodeDemo :: GetStreamType(const char *i_strFileName)
+{
+    int iRet = -1,iHeaderLen;
+    E_StreamType eStreamType=STREAM_TYPE_UNKNOW;
+    
+    if(NULL== i_strFileName)
+    {
+        CODEC_LOGE("NULL== i_strFileName err \r\n");
+        return eStreamType;
+    }
+
+    if(NULL!= strstr(i_strFileName,".h265") ||NULL!= strstr(i_strFileName,".h264"))
+    {
+        eStreamType=STREAM_TYPE_VIDEO_STREAM;
+    }
+    else if(NULL!= strstr(i_strFileName,".aac")||NULL!= strstr(i_strFileName,".g711a"))
+    {
+        eStreamType=STREAM_TYPE_AUDIO_STREAM;
+    }
+    else if(NULL!= strstr(i_strFileName,".flv"))
+    {
+        eStreamType=STREAM_TYPE_ENHANCED_FLV_STREAM;
+    }
+    else if(NULL!= strstr(i_strFileName,".mp4"))
+    {
+        eStreamType=STREAM_TYPE_FMP4_STREAM;
+    }
+    else
+    {
+        CODEC_LOGE("i_strDstFileName unknow %s \r\n",i_strFileName);
+    }
+    return eStreamType;
 }
 
 /*****************************************************************************
@@ -400,7 +452,7 @@ int MediaTranscodeDemo :: CodecFrameToMediaFrame(T_CodecFrame * i_ptCodecFrame,T
             return iRet;
         }
     }
-    m_ptMediaFrame->dwTimeStamp=i_ptCodecFrame->ddwPTS;
+    m_ptMediaFrame->dwTimeStamp=(unsigned int)i_ptCodecFrame->ddwPTS;
     m_ptMediaFrame->dwSampleRate=i_ptCodecFrame->dwSampleRate;
     m_ptMediaFrame->dwWidth=i_ptCodecFrame->dwWidth;
     m_ptMediaFrame->dwHeight=i_ptCodecFrame->dwHeight;
@@ -493,13 +545,14 @@ int MediaTranscodeDemo :: MediaFrameToCodecFrame(T_MediaFrameInfo * i_ptMediaFra
             return iRet;
         }
     }
-    i_ptCodecFrame->ddwDTS=i_ptMediaFrame->dwTimeStamp;
-    i_ptCodecFrame->ddwPTS=i_ptMediaFrame->dwTimeStamp;
+    i_ptCodecFrame->ddwDTS=(int64_t)i_ptMediaFrame->dwTimeStamp;
+    i_ptCodecFrame->ddwPTS=(int64_t)i_ptMediaFrame->dwTimeStamp;
     i_ptCodecFrame->iFrameRate=i_ptCodecFrame->iFrameRate>0?i_ptCodecFrame->iFrameRate : 25;
     i_ptCodecFrame->dwSampleRate=i_ptMediaFrame->dwSampleRate>0?i_ptMediaFrame->dwSampleRate : i_ptCodecFrame->dwSampleRate;//文件中能解析到则以文件为准
     i_ptCodecFrame->dwWidth=i_ptMediaFrame->dwWidth;
     i_ptCodecFrame->dwHeight=i_ptMediaFrame->dwHeight;
     i_ptCodecFrame->dwChannels=i_ptMediaFrame->tAudioEncodeParam.dwChannels;
+    //CODEC_LOGD("ptFrameInfo->dwTimeStamp %d ,%lld %lld\r\n",i_ptMediaFrame->dwTimeStamp,i_ptCodecFrame->ddwPTS,i_ptCodecFrame->ddwDTS);
     return 0;
 }
 
@@ -580,7 +633,7 @@ int MediaTranscodeDemo :: CreateCodecFrameFromJSON(const char * i_strJSON,char *
     ptSrcJson = cJSON_GetObjectItem(ptRootJson,"src");
     iRet =GetFrameInfo(ptSrcJson,o_ptVideoSrcCodecFrame,o_ptAudioSrcCodecFrame,o_strSrcFilePath,i_iSrcBufMax);
     ptDstJson = cJSON_GetObjectItem(ptRootJson,"dst");
-    iRet |=GetFrameInfo(ptDstJson,o_ptVideoDstCodecFrame,o_ptAudioSrcCodecFrame,o_strDstFilePath,i_iDstBufMax);
+    iRet |=GetFrameInfo(ptDstJson,o_ptVideoDstCodecFrame,o_ptAudioDstCodecFrame,o_strDstFilePath,i_iDstBufMax);
     
     cJSON_Delete(ptRootJson);
     
@@ -603,13 +656,13 @@ int MediaTranscodeDemo :: GetFrameInfo(cJSON * i_ptFrameJson,T_CodecFrame * o_pt
     cJSON * ptNode = NULL;
     E_CodecType eVideoEncType=CODEC_TYPE_UNKNOW;
     E_CodecType eAudioEncType=CODEC_TYPE_UNKNOW;
-    int iFrameRate;//
-    unsigned int dwSampleRate;//dwSamplesPerSecond
-    unsigned int dwWidth;//
-    unsigned int dwHeight;//
-    unsigned int dwChannels;//音频通道个数
+    int iFrameRate=0;//
+    unsigned int dwSampleRate=0;//dwSamplesPerSecond
+    unsigned int dwWidth=0;//
+    unsigned int dwHeight=0;//
+    unsigned int dwChannels=0;//音频通道个数
     //如果不设置则使用转码后的格式需要多少采样就用多少,如果转码后的格式对采样数没要求，则解码出多少采样就使用多少采样
-    int iAudioFrameSize;//音频数据每帧固定长度大小,比如8000采样率的pcma 固定长度是160。
+    int iAudioFrameSize=0;//音频数据每帧固定长度大小,比如8000采样率的pcma 固定长度是160。
 
 
     if(NULL== i_ptFrameJson ||NULL== o_strFilePath || NULL== o_ptVideoCodecFrame|| NULL== o_ptAudioCodecFrame)
@@ -700,14 +753,15 @@ int MediaTranscodeDemo :: GetFrameInfo(cJSON * i_ptFrameJson,T_CodecFrame * o_pt
         ptNode = NULL;
     }
 
-
+    CODEC_LOGD("CodecFrame->eEncType Video%d Audio%d ,iFrameRate %d,dwSampleRate %d,dwWidth %d,dwHeight %d,dwChannels %d,iAudioFrameSize%d\r\n",
+    eVideoEncType,eAudioEncType,iFrameRate,dwSampleRate,dwWidth,dwHeight,dwChannels,iAudioFrameSize);
     o_ptVideoCodecFrame->eEncType=eVideoEncType;
     o_ptVideoCodecFrame->iFrameRate=iFrameRate;
     o_ptVideoCodecFrame->dwSampleRate=dwSampleRate;
     o_ptVideoCodecFrame->dwWidth=dwWidth;//宽高最好要和原来保持一致(否则要用filter去缩放处理)//,scale=xx:h=xx //scale=w=iw/2:h=ih/2 //scale=320:-1
     o_ptVideoCodecFrame->dwHeight=dwHeight;//如果不一致，特别是变小的情况下，直接去编码，会导致画面被裁减 乃至绿屏，甚至程序会奔溃
     o_ptVideoCodecFrame->dwChannels=dwChannels;
-    o_ptVideoCodecFrame->dwChannels=iAudioFrameSize;
+    o_ptVideoCodecFrame->iAudioFrameSize=iAudioFrameSize;
 
     o_ptAudioCodecFrame->eEncType=eAudioEncType;
     o_ptAudioCodecFrame->iFrameRate=iFrameRate;
@@ -715,7 +769,7 @@ int MediaTranscodeDemo :: GetFrameInfo(cJSON * i_ptFrameJson,T_CodecFrame * o_pt
     o_ptAudioCodecFrame->dwWidth=dwWidth;//宽高最好要和原来保持一致(否则要用filter去缩放处理)//,scale=xx:h=xx //scale=w=iw/2:h=ih/2 //scale=320:-1
     o_ptAudioCodecFrame->dwHeight=dwHeight;//如果不一致，特别是变小的情况下，直接去编码，会导致画面被裁减 乃至绿屏，甚至程序会奔溃
     o_ptAudioCodecFrame->dwChannels=dwChannels;
-    o_ptAudioCodecFrame->dwChannels=iAudioFrameSize;
+    o_ptAudioCodecFrame->iAudioFrameSize=iAudioFrameSize;
     return 0;
 }
 

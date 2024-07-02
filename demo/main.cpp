@@ -29,18 +29,29 @@ static void PrintUsage(char *i_strProcName);
 ******************************************************************************/
 int main(int argc, char* argv[]) 
 {
+    int iRet = -1;
     MediaTranscodeDemo oMediaTranscodeDemo;
 
     if(argc ==2)
     {
-        return oMediaTranscodeDemo.proc(argv[1]);//Transcode(argv[1],argv[2],NULL,NULL)
+        iRet = oMediaTranscodeDemo.proc(argv[1]);//Transcode(argv[1],argv[2],NULL,NULL)
     }
-    if(argc ==3)
+    else if(argc ==3)
     {
-        return oMediaTranscodeDemo.Transcode(argv[1],argv[2]);//Transcode(argv[1],argv[2],NULL,NULL)
+        iRet = oMediaTranscodeDemo.Transcode(argv[1],argv[2]);//Transcode(argv[1],argv[2],NULL,NULL)
     }
-    PrintUsage(argv[0]);
-    return oMediaTranscodeDemo.proc("demo.json");//oMediaTranscodeDemo.proc("demo.h264","demo.h265");
+    else
+    {
+        PrintUsage(argv[0]);
+        iRet = oMediaTranscodeDemo.proc("demo.json");//oMediaTranscodeDemo.proc("demo.h264","demo.h265");
+    }
+    if(iRet<0)
+    {
+        printf("%s run err,please note that usage and demo.json \r\n",argv[0]);
+        printf("Usage: %s file.json or\r\n",argv[0]);
+        printf("Usage: %s inputFile outputFile\r\n",argv[0]);
+    }
+    return iRet;
 }
 /*****************************************************************************
 -Fuction        : PrintUsage
