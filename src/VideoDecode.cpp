@@ -173,7 +173,7 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
 /*****************************************************************************
 -Fuction        : Decode
 -Description    : Decode
--Input          : 
+-Input          : i_ddwPTS i_ddwDTS -1表示时间戳无效，无时间戳,等同AV_NOPTS_VALUE
 -Output         : 
 -Return         : 
 * Modify Date     Version             Author           Modification
@@ -201,9 +201,9 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
     }
     pbFrameData=i_pbFrameData;
     dwFrameLen=i_dwFrameLen;
-    if(0 != i_ddwPTS)
+    if(i_ddwPTS >= 0)
         ddwPTS=i_ddwPTS;//ms
-    if(0 != i_ddwDTS)
+    if(i_ddwDTS >= 0)
         ddwDTS=i_ddwDTS;//ms
 
     while (dwFrameLen > 0) 
@@ -257,7 +257,7 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
             }
             /* the picture is allocated by the decoder. no need to
                free it */
-            CODEC_LOGD("dec   frame->linesize[0]%d,data[0]%x,width%d, height%d \r\n", m_ptFrame->linesize[0],
+            CODEC_LOGD("dec frame->linesize[0]%d,pts %lld,ddwPTS,ddwDTS%lld,%lld, data[0]%x,width%d, height%d \r\n", m_ptFrame->linesize[0],m_ptFrame->pts,ddwPTS,ddwDTS,
             /*m_ptCodecContext->frame_number,*/m_ptFrame->data[0],m_ptFrame->width, m_ptFrame->height);
 
             if(o_ptAVFrame->linesize[0]>0)

@@ -223,7 +223,8 @@ int VideoRawHandle::RawHandle(AVFrame *m_ptAVFrame)
         if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
         {
             iRet=0;
-            CODEC_LOGD("FiltAVERROR_EOF,frame->data[0]%x, linesize[0]%d,fwidth%d,height%d \r\n", m_ptFiltFrame->data[0], m_ptFiltFrame->linesize[0],m_ptFiltFrame->width, m_ptFiltFrame->height);
+            CODEC_LOGD("FiltAVERROR_EOF,frame->pts%lld, data[0]%x, linesize[0]%d,fwidth%d,height%d \r\n", 
+            m_ptFiltFrame->pts, m_ptFiltFrame->data[0], m_ptFiltFrame->linesize[0],m_ptFiltFrame->width, m_ptFiltFrame->height);
             break;
         }
         if (iRet < 0)

@@ -191,7 +191,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType)
+int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType,int64_t *o_ddwPTS,int64_t *o_ddwDTS)
 {
     int iRet = -1;
     int iFrameRate = 0;
@@ -204,7 +204,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
     }
     if(NULL==i_ptAVFrame ||NULL==o_pbFrameData ||NULL==o_iFrameRate ||NULL==o_iFrameType)
     {
-        CODEC_LOGE("NULL==o_pbFrameData ||NULL==o_iFrameRate err \r\n");
+        CODEC_LOGE("NULL==i_ptAVFrame ||NULL==o_pbFrameData ||NULL==o_iFrameRate ||NULL==o_iFrameType err \r\n");
         return iRet;
     }
     i_ptAVFrame->pts = i_ptAVFrame->best_effort_timestamp;
@@ -236,7 +236,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
             av_packet_unref(m_ptPacket);
             return iRet;
         }
-        CODEC_LOGD("enc size %d, packet %lld,data%p ,%d\r\n",m_ptPacket->size,m_ptPacket->pts, m_ptPacket->data,m_ptPacket->flags);
+        CODEC_LOGD("enc size %d, pts%lld dts%lld,data%p ,%d\r\n",m_ptPacket->size,m_ptPacket->pts,m_ptPacket->dts,m_ptPacket->data,m_ptPacket->flags);
         //av_packet_unref(m_ptPacket);
         if(iFrameLen>0)
         {//暂不支持多帧取出，后续优化为数组或者list
@@ -258,6 +258,14 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
             if (iFrameRate > 0)
             {
                 *o_iFrameRate = iFrameRate;//时间戳外层可以根据帧率计算 m_ptPacket->pts
+            }
+            if (NULL!=o_ddwPTS)
+            {
+                *o_ddwPTS = m_ptPacket->pts;
+            }
+            if (NULL!=o_ddwDTS)
+            {
+                *o_ddwDTS = m_ptPacket->dts;
             }
             memcpy(o_pbFrameData+iFrameLen,m_ptPacket->data,m_ptPacket->size);
             iFrameLen+=m_ptPacket->size;

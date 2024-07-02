@@ -39,7 +39,7 @@ public:
     int GetCodecContext(AVCodecContext **o_ptCodecContext);
 private:
     int CodecTypeToAvCodecId(E_CodecType eCodecType);
-    int SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst);
+    int SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,int i_iChannels);
     int GenerateAdtsHeader(unsigned char * o_pbData,int i_iMaxDataLen,int i_iSampleRate,int i_iChannels,int i_iPayloadLen) ;
     
     

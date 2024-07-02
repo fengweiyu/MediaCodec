@@ -115,7 +115,7 @@ int AudioTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         unsigned int dwChannels=o_pDstFrame->dwChannels==0?i_pSrcFrame->dwChannels : o_pDstFrame->dwChannels;
         iRet=m_pAudioEncode->Init(o_pDstFrame->eEncType,(int)o_pDstFrame->dwSampleRate,(int)dwChannels);
     }
-
+    //CODEC_LOGE("i_pSrcFrame->ddwPTS%d,i_pSrcFrame->ddwDTS%d \r\n",i_pSrcFrame->ddwPTS,i_pSrcFrame->ddwDTS);
     av_frame_unref(m_ptAVFrame);
     iRet=m_pAudioDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,i_pSrcFrame->ddwPTS,i_pSrcFrame->ddwDTS,m_ptAVFrame);
     if(iRet<0)
@@ -137,6 +137,7 @@ int AudioTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         iRet=m_pAudioEncode->GetCodecContext(&ptDstCodecContext);
         iRet=m_pAudioRawHandle->Init(ptSrcCodecContext,ptDstCodecContext,o_pDstFrame->iAudioFrameSize);
     }
+    iRet=m_pAudioEncode->GetCodecContext(&ptDstCodecContext);
     iRet=m_pAudioRawHandle->RawHandle(m_ptAVFrame,ptDstCodecContext);
     if(iRet<0)
     {
@@ -146,9 +147,15 @@ int AudioTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
     do
     {
         iRet=GetDstFrame(o_pDstFrame);
+        if(iRet<0)
+        {
+            CODEC_LOGE("GetDstFrame err \r\n");
+            break;
+        }
+        o_pDstFrame->iFrameBufLen=iRet;
+        o_pDstFrame->eFrameType=CODEC_FRAME_TYPE_AUDIO_FRAME;
         break;//暂不支持循环这里取多帧，由外部调用GetDstFrame来取多帧
     }while(iRet>0);
-
 
     return iRet;//大于0表示取到帧的大小，=0表示帧数据取完了或者填入的帧数据不够
 }
@@ -185,6 +192,7 @@ int AudioTransform::GetDstFrame(T_CodecFrame *o_pDstFrame)
     }
     if(iRet==0)
     {
+        //CODEC_LOGD("m_pAudioRawHandle->GetFrame iRet==0 \r\n");
         return iRet;
     }
     
@@ -196,8 +204,9 @@ int AudioTransform::GetDstFrame(T_CodecFrame *o_pDstFrame)
         return -1;
     }
     o_pDstFrame->iFrameBufLen=iRet;
-    o_pDstFrame->ddwPTS=(uint64_t)ddwPTS;
+    o_pDstFrame->ddwPTS=ddwPTS;
     o_pDstFrame->ddwDTS=o_pDstFrame->ddwPTS;
+    o_pDstFrame->eFrameType=CODEC_FRAME_TYPE_AUDIO_FRAME;
     av_frame_unref(m_ptAVFrame);//暂不支持一次性多帧获取，
     
     return iRet;

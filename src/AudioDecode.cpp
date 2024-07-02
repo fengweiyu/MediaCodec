@@ -99,19 +99,19 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     ptCodec = (AVCodec *)avcodec_find_decoder((enum AVCodecID)iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
-        CODEC_LOGE("NULL==ptCodec err \r\n");
+        CODEC_LOGE("AudioDecode::Init NULL==ptCodec err %d\r\n",i_eCodecType);
         return iRet;
     }
     m_ptParser = av_parser_init(ptCodec->id);
     if(NULL==m_ptParser)
     {
-        CODEC_LOGE("NULL==m_ptParser err \r\n");
+        CODEC_LOGE("AudioDecode::Init NULL==m_ptParser err \r\n");
         return iRet;
     }
     m_ptCodecContext = avcodec_alloc_context3(ptCodec);
     if(NULL==m_ptCodecContext)
     {
-        CODEC_LOGE("NULL==m_ptCodecContext err \r\n");
+        CODEC_LOGE("AudioDecode::Init NULL==m_ptCodecContext err \r\n");
         return iRet;
     }
     // Decoder Setting
@@ -121,7 +121,7 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
 
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
-        CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
+        CODEC_LOGE("AudioDecode::Init avcodec_open2 err %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
         return iRet;
     }
     
@@ -131,7 +131,7 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     m_ptFrame = av_frame_alloc();
     if(NULL==m_ptFrame)
     {
-        CODEC_LOGE("NULL==m_ptFrame err \r\n");
+        CODEC_LOGE("AudioDecode::Init NULL==m_ptFrame err \r\n");
         return iRet;
     }
 
@@ -168,22 +168,22 @@ int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
     }
     pbFrameData=i_pbFrameData;
     dwFrameLen=i_dwFrameLen;
-    if(0 != i_ddwPTS)
+    if(i_ddwPTS >= 0)
         ddwPTS=i_ddwPTS;//ms
-    if(0 != i_ddwDTS)
+    if(i_ddwDTS >= 0)
         ddwDTS=i_ddwDTS;//ms
 
     while (dwFrameLen > 0) 
     {
-        /*av_init_packet(m_ptPacket);
+        av_init_packet(m_ptPacket);
         m_ptPacket->data = pbFrameData;
         m_ptPacket->size = dwFrameLen;
         m_ptPacket->pts = ddwPTS;
         m_ptPacket->dts = ddwDTS;
         pbFrameData += m_ptPacket->size;
-        dwFrameLen -= m_ptPacket->size;*/
+        dwFrameLen -= m_ptPacket->size;
                 
-        //初始化AVPacket对象
+        /*//初始化AVPacket对象，av_parser_parse2会导致解码出的frame pts不会被赋值
         av_init_packet(m_ptPacket);
         iRet = av_parser_parse2(m_ptParser,m_ptCodecContext, &m_ptPacket->data, &m_ptPacket->size,pbFrameData, dwFrameLen, ddwPTS, ddwDTS, 0);
         if (iRet < 0) 
@@ -192,7 +192,8 @@ int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
             return iRet;
         }
         pbFrameData += iRet;
-        dwFrameLen -= iRet;
+        dwFrameLen -= iRet;*/
+        
         if (m_ptPacket->size<=0)
         {
             CODEC_LOGE("AudioDecode av_parser_parse2 err m_ptPacket->size<=0\r\n");
@@ -223,8 +224,8 @@ int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
             }
             /* the picture is allocated by the decoder. no need to
                free it */
-            CODEC_LOGD("AudioDecode nb_samples %d frame->linesize[0]%d,data[0]%x,width%d, height%d \r\n", m_ptFrame->linesize[0],
-            m_ptFrame->nb_samples,m_ptFrame->data[0],m_ptFrame->width, m_ptFrame->height);
+            CODEC_LOGD("AudioDecode pts %lld,nb_samples %d frame->linesize[0]%d,data[0]%x,width%d, height%d \r\n", m_ptFrame->pts,m_ptFrame->nb_samples,
+            m_ptFrame->linesize[0],m_ptFrame->data[0],m_ptFrame->width, m_ptFrame->height);
             /*data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);//ffmepg4.2.1取数据示例
             if (data_size < 0) {
                 //This should not occur, checking just for paranoia

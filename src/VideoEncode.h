@@ -31,7 +31,7 @@ class VideoEncode
 public:
 	VideoEncode();
 	virtual ~VideoEncode();
-    int Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType);
+    int Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsigned int i_dwFrameMaxLen,int *o_iFrameRate,E_CodecFrameType *o_iFrameType,int64_t *o_ddwPTS=NULL,int64_t *o_ddwDTS=NULL);
     int Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int i_iHeight);
 private:
     int CodecTypeToAvCodecId(E_CodecType eCodecType);

@@ -83,16 +83,16 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     
     /* Find the encoder to be used by its name. */
     iCodecID=CodecTypeToAvCodecId(i_eCodecType);
-    ptCodec = (AVCodec  *)avcodec_find_encoder((enum AVCodecID)iCodecID);//查找解码器
+    ptCodec = (AVCodec *)avcodec_find_encoder((enum AVCodecID)iCodecID);//查找解码器
     if(NULL==ptCodec)
     {
-        CODEC_LOGE("NULL==ptCodec err \r\n");
+        CODEC_LOGE("AudioEncode::Init NULL==ptCodec err iCodecID%d i_eCodecType%d\r\n",iCodecID,i_eCodecType);
         return iRet;
     }
     m_ptCodecContext = avcodec_alloc_context3(ptCodec);
     if(NULL==m_ptCodecContext)
     {
-        CODEC_LOGE("NULL==m_ptCodecContext err \r\n");
+        CODEC_LOGE("AudioEncode::Init NULL==m_ptCodecContext err \r\n");
         return iRet;
     }
     // Encoder Setting
@@ -102,10 +102,10 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     //m_ptCodecContext->channel_layout = av_get_default_channel_layout(i_iChannels);
     //m_ptCodecContext->channels = i_iChannels;//新版本已经删除
     //m_ptCodecContext->ch_layout.nb_channels = i_iChannels;//新版本
-    iRet = SelectChannelLayout((const AVCodec *)ptCodec, &m_ptCodecContext->ch_layout);
+    iRet = SelectChannelLayout((const AVCodec *)ptCodec, &m_ptCodecContext->ch_layout,i_iChannels);
     if (iRet < 0)
     {
-        CODEC_LOGE("SelectChannelLayout err \r\n");
+        CODEC_LOGE("AudioEncode::Init SelectChannelLayout err \r\n");
         return iRet;
     }
     m_ptCodecContext->sample_rate = i_iSampleRate;
@@ -119,7 +119,7 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     /* Open the encoder for the audio stream to use it later. */
     if ((iRet = avcodec_open2(m_ptCodecContext, ptCodec, NULL)) < 0) 
     {
-        CODEC_LOGE("Could not open codec\n");
+        CODEC_LOGE("AudioEncode::Init Could not open codec\n");
         //avcodec_free_context(&m_ptCodecContext);//析构会统一释放
         return iRet;
     }
@@ -128,10 +128,10 @@ int AudioEncode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     m_ptPacket = av_packet_alloc();
     if(NULL==m_ptPacket)
     {
-        CODEC_LOGE("NULL==m_pPacket err \r\n");
+        CODEC_LOGE("AudioEncode::Init NULL==m_pPacket err \r\n");
         return iRet;
     }
-
+    CODEC_LOGD("AudioEncode::Init m_ptCodecContext->ch_layout.nb_channels%d,i_iChannels %d \r\n",m_ptCodecContext->ch_layout.nb_channels,i_iChannels);
     return 0;
 }
 /*****************************************************************************
@@ -299,28 +299,66 @@ int AudioEncode::CodecTypeToAvCodecId(E_CodecType eCodecType)
 -Description    : 
 select layout with the highest channel count 
 from ffmpeg select_channel_layout
--Input          : 
+-Input          : i_iChannels 为0则自己推导
 -Output         : 
 -Return         : 
 * Modify Date     Version             Author           Modification
 * -----------------------------------------------
 * 2023/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
-int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst)
+int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,int i_iChannels)
 {
-    const AVChannelLayout *p, *best_ch_layout;
-    int best_nb_channels   = 0;
-    AVChannelLayout ch_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;
+    const AVChannelLayout *p=NULL, *best_ch_layout=NULL;
+    int best_nb_channels = 0;
+    AVChannelLayout ch1_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;//首选单声道
+    AVChannelLayout ch2_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;//双声道
+    AVChannelLayout ch3_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_2POINT1;//三声道
+
+    switch(i_iChannels)
+    {
+        case 1:
+        {
+            best_ch_layout=&ch1_layout;
+            break;
+        }
+        case 2:
+        {
+            best_ch_layout=&ch2_layout;
+            break;
+        }
+        case 3:
+        {
+            best_ch_layout=&ch3_layout;
+            break;
+        }
+        default:
+        {
+            CODEC_LOGW("i_iChannels err%d,use default ch1_layout\r\n",i_iChannels);
+            best_ch_layout=&ch1_layout;
+            break;
+        }
+    }
     
     if (!codec->ch_layouts)
-        return av_channel_layout_copy(dst, &ch_layout);
+    {
+        CODEC_LOGW("!codec->ch_layouts use best_ch_layout\r\n");
+        return av_channel_layout_copy(dst, best_ch_layout);
+    }
 
     p = codec->ch_layouts;
-    while (p->nb_channels) {
+    while (p->nb_channels) 
+    {
         int nb_channels = p->nb_channels;
 
-        if (nb_channels > best_nb_channels) {
-            best_ch_layout   = p;
+        if (i_iChannels>0 && nb_channels == i_iChannels) 
+        {
+            best_ch_layout = p;
+            best_nb_channels = nb_channels;
+            break;
+        }
+        else if(nb_channels > best_nb_channels) 
+        {
+            best_ch_layout = p;
             best_nb_channels = nb_channels;
         }
         p++;

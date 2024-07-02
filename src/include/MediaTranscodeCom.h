@@ -74,8 +74,8 @@ typedef struct CodecFrame
     
     //裸流的帧数据(数据流,eStreamType需要被赋值为对应的数据流格式)时，下面5个参数都需要外部赋值然后传入
     E_CodecType eEncType;
-    uint64_t ddwDTS;//ms
-    uint64_t ddwPTS;//ms
+    int64_t ddwDTS;//ms -1表示时间戳无效，无时间戳
+    int64_t ddwPTS;//ms -1表示时间戳无效，无时间戳
     int iFrameRate;//
     unsigned int dwSampleRate;//dwSamplesPerSecond
     E_CodecFrameType eFrameType;
@@ -83,7 +83,8 @@ typedef struct CodecFrame
     unsigned int dwHeight;//
     unsigned int dwChannels;//音频通道个数
     //如果不设置则使用转码后的格式需要多少采样就用多少,如果转码后的格式对采样数没要求，则解码出多少采样就使用多少采样
-    int iAudioFrameSize;//音频数据每帧固定长度大小,比如8000采样率的pcma 固定长度是160。
+    int iAudioFrameSize;//音频数据每帧固定长度大小(每帧读取的样本数量),比如8000采样率的pcma 固定长度是160(通道为1)。aac 44100一帧是是1024(通道为1)
+    //音频帧1帧最终大小=iAudioFrameSize*dwChannels
 
 	//输出1帧数据结果(目前用不上，可删除)
     //unsigned char *pbFrameStartPos;//包含00 00 00 01

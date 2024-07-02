@@ -153,7 +153,8 @@ int VideoTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         }
         iRet=m_pVideoEncode->Init(o_pDstFrame->eEncType,o_pDstFrame->iFrameRate,(int)o_pDstFrame->dwWidth,(int)o_pDstFrame->dwHeight);
     }
-    iRet=m_pVideoEncode->Encode(m_ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,&o_pDstFrame->iFrameRate,&o_pDstFrame->eFrameType);
+    iRet=m_pVideoEncode->Encode(m_ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,
+    &o_pDstFrame->iFrameRate,&o_pDstFrame->eFrameType,&o_pDstFrame->ddwPTS,&o_pDstFrame->ddwDTS);
     if(iRet<=0)
     {
         CODEC_LOGE("m_pVideoEncode->Encode err \r\n");

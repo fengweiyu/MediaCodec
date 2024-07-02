@@ -2,7 +2,7 @@
 * Copyright (C) 2023-2028 Hanson Yu  All rights reserved.
 ------------------------------------------------------------------------------
 * File Module           :       AudioRawHandle.cpp
-* Description           : 	
+* Description           : 	    小采样率转大采样率可能样本不够，需要添加静音帧
 * Created               :       2023.01.13.
 * Author                :       Yu Weifeng
 * Function List         : 	
@@ -157,9 +157,9 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
     unsigned int dwFrameLen=0;
     int iSampleNum =0;
 
-    if(NULL==m_ptAVFrame)
+    if(NULL==m_ptAVFrame || NULL==i_ptDstEncodeCtx)
     {
-        CODEC_LOGE("NULL==i_ptAVFrame RawHandle err \r\n");
+        CODEC_LOGE("NULL==i_ptAVFrame || NULL==i_ptDstEncodeCtx RawHandle err \r\n");
         return iRet;
     }
     m_ddwAudioFramePTS=m_ptAVFrame->pts;
@@ -238,6 +238,7 @@ int AudioRawHandle::GetFrame(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeC
     int iSamplesInFifo = av_audio_fifo_size(m_ptAudioFifo);
     if (0 >= iSamplesInFifo) 
     {
+        CODEC_LOGW("av_audio_fifo_size 0 >= iSamplesInFifo %d\r\n",iSamplesInFifo);
         return 0;
     }
     // 默认使用自定义采样大小,便于固定帧长
@@ -246,7 +247,8 @@ int AudioRawHandle::GetFrame(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeC
     {
         iFrameSize = i_ptDstEncodeCtx->frame_size > 0 ? i_ptDstEncodeCtx->frame_size : iSamplesInFifo;
     }
-    
+
+    iRet=0;
     if (av_audio_fifo_size(m_ptAudioFifo) >= iFrameSize) 
     {
         iRet = this->GetFrameFromFifo(m_ptAVFrame,i_ptDstEncodeCtx,iFrameSize);// 按标准长度读取并编码
@@ -264,7 +266,8 @@ int AudioRawHandle::GetFrame(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeC
             return this->GetFrameFromFifo(m_ptAVFrame,i_ptDstEncodeCtx,iFrameSize);
         }
     }
-    return 0;
+    //CODEC_LOGD("av_audio_fifo_size iSamplesInFifo %d,m_iDstFrameSize %d,i_ptDstEncodeCtx->frame_size %d,iFrameSize %d\r\n",iSamplesInFifo,m_iDstFrameSize,i_ptDstEncodeCtx->frame_size,iFrameSize);
+    return iRet;
 }
 
 /*****************************************************************************
@@ -301,6 +304,8 @@ int AudioRawHandle::InitConvertedSamples(AVCodecContext *i_ptDstEncodeCtx,int i_
         av_freep(&m_ppbConvertedSamples);
         m_ppbConvertedSamples = NULL;
     }
+    //CODEC_LOGD("av_samples_alloc_array_and_samples iUpperSampleSize %d ,%p\n",iUpperSampleSize,i_ptDstEncodeCtx);
+
     /* Allocate as many pointers as there are audio channels.
      * Each pointer will point to the audio samples of the corresponding
      * channels (although it may be NULL for interleaved formats).
