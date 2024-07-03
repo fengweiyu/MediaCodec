@@ -175,7 +175,7 @@ int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
         {
             iRet=iFrameLen;
-            //CODEC_LOGD("iRet == AVERROR_EOF %lld,size %d, data%p %d\r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data,m_ptPacket->flags);
+            //CODEC_LOGD("m_ptPacket %lld,size %d, data%p ,iRet == AVERROR_EOF%d\r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data,iRet == AVERROR_EOF?1:0);
             break;
         }
         else if (iRet < 0) 
@@ -341,7 +341,7 @@ int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
     
     if (!codec->ch_layouts)
     {
-        CODEC_LOGW("!codec->ch_layouts use best_ch_layout\r\n");
+        CODEC_LOGW("!codec->ch_layouts ,use best_ch_layout%d\r\n",best_ch_layout->nb_channels);
         return av_channel_layout_copy(dst, best_ch_layout);
     }
 

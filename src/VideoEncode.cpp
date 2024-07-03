@@ -209,7 +209,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
     }
     i_ptAVFrame->pts = i_ptAVFrame->best_effort_timestamp;
     i_ptAVFrame->pts = av_rescale_q(i_ptAVFrame->pts, {1, 1000}, m_ptCodecContext->time_base);// 时间戳转换
-
+    //CODEC_LOGD("sending a frame for encoding %d,%d\n",i_ptAVFrame->pkt_size,i_ptAVFrame->linesize[0]);
     i_ptAVFrame->pict_type = AV_PICTURE_TYPE_NONE;//AV_PIX_FMT_YUV420P
     iRet = avcodec_send_frame(m_ptCodecContext, i_ptAVFrame);
     if (iRet < 0) 
@@ -236,7 +236,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
             av_packet_unref(m_ptPacket);
             return iRet;
         }
-        CODEC_LOGD("enc size %d, pts%lld dts%lld,data%p ,%d\r\n",m_ptPacket->size,m_ptPacket->pts,m_ptPacket->dts,m_ptPacket->data,m_ptPacket->flags);
+        CODEC_LOGD("enc size %d,%d, pts%lld dts%lld,data%p ,%d\r\n",m_ptPacket->size,i_ptAVFrame->pkt_size,m_ptPacket->pts,m_ptPacket->dts,m_ptPacket->data,m_ptPacket->flags);
         //av_packet_unref(m_ptPacket);
         if(iFrameLen>0)
         {//暂不支持多帧取出，后续优化为数组或者list
