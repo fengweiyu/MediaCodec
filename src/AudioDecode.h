@@ -37,6 +37,7 @@ public:
     int GetCodecContext(AVCodecContext **o_ptCodecContext);
 private:
     int CodecTypeToAvCodecId(E_CodecType eCodecType);
+    int SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,int i_iChannels);
     
     AVCodecParserContext *m_ptParser;//用于将码流数据解析到AVPacket结构体中
     AVPacket * m_ptPacket;//存储一帧压缩编码数据

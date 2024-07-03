@@ -105,8 +105,8 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     m_ptParser = av_parser_init(ptCodec->id);
     if(NULL==m_ptParser)
     {
-        CODEC_LOGE("AudioDecode::Init NULL==m_ptParser err \r\n");
-        return iRet;
+        CODEC_LOGE("AudioDecode::Init NULL==m_ptParser err%#x \r\n",ptCodec->id);
+        //return iRet;//g711a不支持av_parser_init，暂时也不用m_ptParser
     }
     m_ptCodecContext = avcodec_alloc_context3(ptCodec);
     if(NULL==m_ptCodecContext)
@@ -118,6 +118,12 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     m_ptCodecContext->sample_rate = i_iSampleRate;
     //m_ptCodecContext->channels = i_iChannels;//新版本已经删除
     //m_ptCodecContext->ch_layout.nb_channels = i_iChannels;//新版本
+    iRet = SelectChannelLayout((const AVCodec *)ptCodec, &m_ptCodecContext->ch_layout,i_iChannels);
+    if (iRet < 0)
+    {
+        CODEC_LOGE("AudioEncode::Init SelectChannelLayout err \r\n");
+        return iRet;
+    }
 
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
@@ -330,5 +336,77 @@ int AudioDecode::CodecTypeToAvCodecId(E_CodecType eCodecType)
         default:
             return AV_CODEC_ID_NONE;
     }
+}
+
+/*****************************************************************************
+-Fuction        : SelectChannelLayout
+-Description    : 
+select layout with the highest channel count 
+from ffmpeg select_channel_layout
+-Input          : i_iChannels 为0则自己推导
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2023/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioDecode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,int i_iChannels)
+{
+    const AVChannelLayout *p=NULL, *best_ch_layout=NULL;
+    int best_nb_channels = 0;
+    AVChannelLayout ch1_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;//首选单声道
+    AVChannelLayout ch2_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;//双声道
+    AVChannelLayout ch3_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_2POINT1;//三声道
+
+    switch(i_iChannels)
+    {
+        case 1:
+        {
+            best_ch_layout=&ch1_layout;
+            break;
+        }
+        case 2:
+        {
+            best_ch_layout=&ch2_layout;
+            break;
+        }
+        case 3:
+        {
+            best_ch_layout=&ch3_layout;
+            break;
+        }
+        default:
+        {
+            CODEC_LOGW("i_iChannels err %d,use default ch1_layout\r\n",i_iChannels);
+            best_ch_layout=&ch1_layout;
+            break;
+        }
+    }
+    
+    if (!codec->ch_layouts)
+    {
+        CODEC_LOGW("!codec->ch_layouts use best_ch_layout%d\r\n",best_ch_layout->nb_channels);
+        return av_channel_layout_copy(dst, best_ch_layout);
+    }
+
+    p = codec->ch_layouts;
+    while (p->nb_channels) 
+    {
+        int nb_channels = p->nb_channels;
+
+        if (i_iChannels>0 && nb_channels == i_iChannels) 
+        {
+            best_ch_layout = p;
+            best_nb_channels = nb_channels;
+            break;
+        }
+        else if(nb_channels > best_nb_channels) 
+        {
+            best_ch_layout = p;
+            best_nb_channels = nb_channels;
+        }
+        p++;
+    }
+    return av_channel_layout_copy(dst, best_ch_layout);
 }
 
