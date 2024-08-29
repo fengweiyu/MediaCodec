@@ -124,6 +124,11 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
     m_ptCodecContext->slices= 1;//nalu不切片，赋值1或者0
     m_ptCodecContext->thread_count = 1;//如果只是设置slices还是会切片，因为默认多线程编码(以片为单位)会导致切片
     m_ptCodecContext->thread_type = FF_THREAD_FRAME;//设置以帧为单位的单线程编码(以帧为单位的多线程编码会报错)，这样才不会切片
+    //thread_type设置为 FF_THREAD_FRAME，上面赋值的thread_count = 1才会生效。
+    //否则如果thread_type = FF_THREAD_SLICE,(即使thread_count = 1)则还会是多线程
+    //thread_count设置10个线程(FF_THREAD_FRAME)，则要先放10帧，第11帧放入的时候，第1帧才编码出来，则会导致延时大
+    //thread_count如果不设置，那么默认是cpu核心数，比如4核则thread_count默认值为4
+
     
     if (iCodecID == AV_CODEC_ID_H264) 
     {
@@ -151,7 +156,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
         int iQp = 27;
         int iGop = 2;
         m_ptCodecContext->profile = FF_PROFILE_HEVC_MAIN;
-        av_opt_set(m_ptCodecContext->priv_data, "preset", "ultrafast", 0); ///< 暂不支持其他预置方式  szPreSet.c_str()
+        av_opt_set(m_ptCodecContext->priv_data, "preset", "ultrafast", 0); ///设置为速度最快的编码模式，提高编码效率(转码1帧20ms左右(4线程且画面变化不太剧烈,剧烈50ms左右))
         av_opt_set(m_ptCodecContext->priv_data, "tune", "zero-latency", 0);
         char strX265Params[1024];
         snprintf(strX265Params, sizeof(strX265Params),
