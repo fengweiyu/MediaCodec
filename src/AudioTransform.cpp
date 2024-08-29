@@ -197,7 +197,7 @@ int AudioTransform::GetDstFrame(T_CodecFrame *o_pDstFrame)
     }
     
     iRet=m_pAudioEncode->Encode(m_ptAVFrame,o_pDstFrame->pbFrameBuf,(unsigned int)o_pDstFrame->iFrameBufMaxLen,&ddwPTS);
-    if(iRet<=0)
+    if(iRet<0)
     {
         CODEC_LOGE("m_pAudioEncode->Encode err \r\n");
         av_frame_unref(m_ptAVFrame);
