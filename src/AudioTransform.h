@@ -50,6 +50,7 @@ private:
 	AudioDecode *m_pAudioDecode;
 	AudioEncode *m_pAudioEncode;
 	AudioRawHandle *m_pAudioRawHandle;
+    AudioRawFilter *m_pAudioFilter;
 };
 
 

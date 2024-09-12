@@ -36,6 +36,7 @@ AudioTransform::AudioTransform()
     m_pAudioRawHandle = NULL;
     m_pAudioEncode = NULL;
     m_ptAVFrame = av_frame_alloc();
+    m_pAudioFilter=NULL;
 }
 /*****************************************************************************
 -Fuction        : ~AudioTransform
@@ -63,6 +64,11 @@ AudioTransform::~AudioTransform()
     {
         delete m_pAudioEncode;
         m_pAudioEncode = NULL;
+    }
+    if(NULL!= m_pAudioFilter)
+    {
+        delete m_pAudioFilter;
+        m_pAudioFilter = NULL;
     }
     if(NULL!=m_ptAVFrame)
     {
@@ -137,8 +143,21 @@ int AudioTransform::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         iRet=m_pAudioEncode->GetCodecContext(&ptDstCodecContext);
         iRet=m_pAudioRawHandle->Init(ptSrcCodecContext,ptDstCodecContext,o_pDstFrame->iAudioFrameSize);
     }
+    if(NULL== m_pAudioFilter)
+    {
+        m_pAudioFilter = new AudioRawFilter();
+        if(NULL==m_pAudioFilter)
+        {
+            CODEC_LOGE("NULL==m_pAudioFilter err \r\n");
+            return iRet;
+        }
+        iRet=m_pAudioDecode->GetCodecContext(&ptSrcCodecContext);
+        iRet=m_pAudioEncode->GetCodecContext(&ptDstCodecContext);
+        iRet=m_pAudioFilter->Init(ptSrcCodecContext,ptDstCodecContext);
+    }
     iRet=m_pAudioEncode->GetCodecContext(&ptDstCodecContext);
     iRet=m_pAudioRawHandle->RawHandle(m_ptAVFrame,ptDstCodecContext);
+    //iRet=m_pAudioFilter->RawHandle(m_ptAVFrame);
     if(iRet<0)
     {
         CODEC_LOGE("m_pAudioRawHandle->RawHandle err \r\n");
@@ -184,7 +203,9 @@ int AudioTransform::GetDstFrame(T_CodecFrame *o_pDstFrame)
         return iRet;
     }
     iRet=m_pAudioEncode->GetCodecContext(&ptDstCodecContext);
+    av_frame_unref(m_ptAVFrame);//暂不支持一次性多帧获取，
     iRet=m_pAudioRawHandle->GetFrame(m_ptAVFrame,ptDstCodecContext);
+    //iRet=m_pAudioFilter->GetFrame(m_ptAVFrame);
     if(iRet<0)
     {
         CODEC_LOGE("m_pAudioRawHandle->RawHandle err \r\n");
@@ -207,7 +228,6 @@ int AudioTransform::GetDstFrame(T_CodecFrame *o_pDstFrame)
     o_pDstFrame->ddwPTS=ddwPTS;
     o_pDstFrame->ddwDTS=o_pDstFrame->ddwPTS;
     o_pDstFrame->eFrameType=CODEC_FRAME_TYPE_AUDIO_FRAME;
-    av_frame_unref(m_ptAVFrame);//暂不支持一次性多帧获取，
     
     return iRet;
 }
