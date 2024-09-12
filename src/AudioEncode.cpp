@@ -175,7 +175,8 @@ int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
         {
             iRet=iFrameLen;
-            //CODEC_LOGD("m_ptPacket %lld,size %d, data%p ,iRet == AVERROR_EOF%d\r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data,iRet == AVERROR_EOF?1:0);
+            CODEC_LOGD("m_ptPacket %lld,Packet->size %d AVFrame->nb_samples%d, data%p ,iRet == AVERROR_EOF %d\r\n",m_ptPacket->pts, 
+            m_ptPacket->size,i_ptAVFrame->pkt_size, i_ptAVFrame->nb_samples,m_ptPacket->data,iRet == AVERROR_EOF?1:0);
             break;
         }
         else if (iRet < 0) 
@@ -183,8 +184,8 @@ int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
             CODEC_LOGE("AudioEncode avcodec_receive_packet err \r\n");
             av_packet_unref(m_ptPacket);
             return iRet;
-        }
-        CODEC_LOGD("AudioEncode enc packet %lld,size %d, data%p \r\n",m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data, m_ptPacket->size);
+        }// i_ptAVFrame->pkt_size, 只有视频帧才会赋值，音频帧看i_ptAVFrame->nb_samples
+        CODEC_LOGD("AudioEncode pts%lld,enc packet pts%lld,size %d, data%p,i_ptAVFrame->nb_samples%d \r\n",i_ptAVFrame->pts,m_ptPacket->pts, m_ptPacket->size, m_ptPacket->data,i_ptAVFrame->nb_samples);
         //av_packet_unref(m_ptPacket);
         if(iFrameLen>0)
         {//暂不支持多帧取出，后续优化为数组或者list
@@ -333,7 +334,7 @@ int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
         }
         default:
         {
-            CODEC_LOGW("i_iChannels err%d,use default ch1_layout\r\n",i_iChannels);
+            CODEC_LOGW("AudioEncode i_iChannels err%d,use default ch1_layout\r\n",i_iChannels);
             best_ch_layout=&ch1_layout;
             break;
         }
@@ -341,7 +342,7 @@ int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
     
     if (!codec->ch_layouts)
     {
-        CODEC_LOGW("!codec->ch_layouts ,use best_ch_layout%d\r\n",best_ch_layout->nb_channels);
+        CODEC_LOGW("AudioEncode !codec->ch_layouts ,use best_ch_layout%d,i_iChannels%d\r\n",best_ch_layout->nb_channels,i_iChannels);
         return av_channel_layout_copy(dst, best_ch_layout);
     }
 

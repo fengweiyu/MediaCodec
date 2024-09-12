@@ -105,7 +105,7 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     m_ptParser = av_parser_init(ptCodec->id);
     if(NULL==m_ptParser)
     {
-        CODEC_LOGE("AudioDecode::Init NULL==m_ptParser err%#x \r\n",ptCodec->id);
+        CODEC_LOGE("AudioDecode::Init NULL==m_ptParser %#x \r\n",ptCodec->id);
         //return iRet;//g711a不支持av_parser_init，暂时也不用m_ptParser
     }
     m_ptCodecContext = avcodec_alloc_context3(ptCodec);
@@ -121,7 +121,7 @@ int AudioDecode::Init(E_CodecType i_eCodecType,int i_iSampleRate,int i_iChannels
     iRet = SelectChannelLayout((const AVCodec *)ptCodec, &m_ptCodecContext->ch_layout,i_iChannels);
     if (iRet < 0)
     {
-        CODEC_LOGE("AudioEncode::Init SelectChannelLayout err \r\n");
+        CODEC_LOGE("AudioDecode::Init SelectChannelLayout err \r\n");
         return iRet;
     }
 
@@ -377,7 +377,7 @@ int AudioDecode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
         }
         default:
         {
-            CODEC_LOGW("i_iChannels err %d,use default ch1_layout\r\n",i_iChannels);
+            CODEC_LOGW("AudioDecode i_iChannels err %d,use default ch1_layout\r\n",i_iChannels);
             best_ch_layout=&ch1_layout;
             break;
         }
@@ -385,7 +385,7 @@ int AudioDecode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
     
     if (!codec->ch_layouts)
     {
-        CODEC_LOGW("!codec->ch_layouts use best_ch_layout%d\r\n",best_ch_layout->nb_channels);
+        CODEC_LOGW("AudioDecode !codec->ch_layouts ,use best_ch_layout%d i_iChannels%d\r\n",best_ch_layout->nb_channels,i_iChannels);
         return av_channel_layout_copy(dst, best_ch_layout);
     }
 
