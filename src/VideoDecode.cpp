@@ -136,16 +136,17 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     m_ptCodecContext->thread_count = 1;
     if (ptCodec->capabilities | AV_CODEC_CAP_FRAME_THREADS) 
     {
-      m_ptCodecContext->thread_type = FF_THREAD_FRAME;
+        m_ptCodecContext->thread_type = FF_THREAD_FRAME;
     }
     else if (ptCodec->capabilities | AV_CODEC_CAP_SLICE_THREADS)
     {
-      m_ptCodecContext->thread_type = FF_THREAD_SLICE;
+        m_ptCodecContext->thread_type = FF_THREAD_SLICE;
     }
     else 
     {
         m_ptCodecContext->thread_count = 1; // don't use multithreading
     }
+
     //if (ptCodec->capabilities & AV_CODEC_CAP_TRUNCATED) 
     {
         //m_ptCodecContext->flags |= AV_CODEC_FLAG_TRUNCATED;
@@ -154,6 +155,7 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     AVDictionary * ptOpts = NULL;
     av_dict_set(&ptOpts, "preset", "ultrafast", 0);
     av_dict_set(&ptOpts, "tune", "stillimage,fastdecode,zerolatency", 0);
+    //av_dict_set_int(&ptOpts, "ignore_poc", 1, 0);// 忽略poc的影响，默认设备没有B帧
     //if (avcodec_open2(m_ptCodecContext, ptCodec, &ptOpts) < 0)
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
