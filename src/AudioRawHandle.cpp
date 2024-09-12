@@ -98,7 +98,10 @@ int AudioRawHandle::Init(AVCodecContext *i_ptSrcDecodeCtx,AVCodecContext *i_ptDs
 {
     int iRet = -1;
     
-    m_iDstFrameSize = i_iDstFrameSize;//
+    if (i_ptDstEncodeCtx->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) 
+    {
+        m_iDstFrameSize = i_iDstFrameSize;//
+    }
     /* Initialize the resampler to be able to convert audio sample formats. */
     /*
      * Create a resampler context for the conversion.
@@ -111,6 +114,9 @@ int AudioRawHandle::Init(AVCodecContext *i_ptSrcDecodeCtx,AVCodecContext *i_ptDs
         CODEC_LOGE("Could not allocate resample context\n");
         return iRet;
     }
+    CODEC_LOGW("AudioRawHandle dst->nb_channels%d sample_fmt%d sample_rate%d,src->nb_channels%d sample_fmt%d sample_rate%d\r\n",
+    i_ptDstEncodeCtx->ch_layout.nb_channels,i_ptDstEncodeCtx->sample_fmt,i_ptDstEncodeCtx->sample_rate,
+    i_ptSrcDecodeCtx->ch_layout.nb_channels,i_ptSrcDecodeCtx->sample_fmt,i_ptSrcDecodeCtx->sample_rate);
     /*
     * Perform a sanity check so that the number of converted samples is
     * not greater than the number of samples to be converted.
@@ -162,8 +168,11 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
         CODEC_LOGE("NULL==i_ptAVFrame || NULL==i_ptDstEncodeCtx RawHandle err \r\n");
         return iRet;
     }
-    m_ddwAudioFramePTS=m_ptAVFrame->pts;
     m_ddwAudioFrameBasePTS=m_ptAVFrame->pts;
+    if(0 == m_ddwAudioFramePTS)//理论上时间戳初始化一次就好后面需要重新计算//实测还是得使用外部传入的时间戳，否则时间戳会被加大，导致音频放的很慢
+    {//第一次使用外面传进来的帧时间戳，后续使用自己计算的时间戳
+        m_ddwAudioFramePTS=m_ddwAudioFrameBasePTS;//因为转码，特别是采样率变化的转码，外部传入的时间戳是不准的
+    }//有时会出现输入帧但是不输出帧的情况，因为样本数可能不够要更多数据，也有可能输入一帧数据太多，输出就会有多帧
     m_ptAVFrame->pts = m_ptAVFrame->best_effort_timestamp;//当该标志被设置时，FFmpeg会尝试使用最接近的时间戳来表示每个解码帧的时间戳，即尽可能接近原始媒体中的时间戳
 
     /* If there is decoded data, convert and store it. */
@@ -175,15 +184,15 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
         return iRet;
     }
     
-    /* Convert the samples using the resampler. */
-    iSampleNum = swr_convert(m_ptResmapleCtx, m_ppbConvertedSamples, m_iCurConvertedSamplesSize, (const uint8_t**)m_ptAVFrame->data, m_ptAVFrame->nb_samples);
-    if (0 > iSampleNum) 
+    /* Convert the samples using the resampler. *///重采样，低采样率的样本数转换为高采样的样本数要用类似插值法
+    iSampleNum = swr_convert(m_ptResmapleCtx, m_ppbConvertedSamples, m_iCurConvertedSamplesSize, (const uint8_t**)m_ptAVFrame->data, m_ptAVFrame->nb_samples);//高转低则要去掉多余的样本
+    if (0 > iSampleNum) //最后输出目标采样率对应的(所需要的)样本数
     {
         CODEC_LOGE("swr_convert (error '%d')\n",iSampleNum);
         //CODEC_LOGE("Could not convert input samples (error '%s')\n",av_err2str(iSampleNum));//error: taking address of temporary array
         return iSampleNum;
     }
-
+    CODEC_LOGD("swr_convert nb_samples%d iSampleNum%d m_iCurConvertedSamplesSize%d\n",m_ptAVFrame->nb_samples,iSampleNum,m_iCurConvertedSamplesSize);
     
     /* Make the FIFO as large as it needs to be to hold both, the old and the
      * new samples. */
@@ -215,7 +224,7 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
 /*****************************************************************************
 -Fuction        : GetFrame
 -Description    : 
-先调用RawHandle把源数据放入缓冲区
+先调用RawHandle把源数据放入缓冲区(缓冲区中数据足够帧长要求再取出进行编码)
 再不断调用并判断返回值为0才表示缓存中的帧数据已经读完
 -Input          : (0 != i_iUseAllSampleFlag) //剩余样本也强制处理(不按照设置的帧长去处理)
 -Output         : 
@@ -265,8 +274,9 @@ int AudioRawHandle::GetFrame(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncodeC
         {
             return this->GetFrameFromFifo(m_ptAVFrame,i_ptDstEncodeCtx,iFrameSize);
         }
-    }
-    //CODEC_LOGD("av_audio_fifo_size iSamplesInFifo %d,m_iDstFrameSize %d,i_ptDstEncodeCtx->frame_size %d,iFrameSize %d\r\n",iSamplesInFifo,m_iDstFrameSize,i_ptDstEncodeCtx->frame_size,iFrameSize);
+    }// i_ptAVFrame->pkt_size, 只有视频帧才会赋值，音频帧看i_ptAVFrame->nb_samples
+    CODEC_LOGD("av_audio_fifo_size iSamplesInFifo %d,m_iDstFrameSize %d,i_ptDstEncodeCtx->frame_size %d,iFrameSize %d AVFrame->nb_samples%d\r\n",
+    iSamplesInFifo,m_iDstFrameSize,i_ptDstEncodeCtx->frame_size,iFrameSize,m_ptAVFrame->nb_samples);
     return iRet;
 }
 
@@ -369,6 +379,7 @@ int AudioRawHandle::GetFrameFromFifo(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDs
     // 时间戳比输入时间戳还小时，将输入时间戳设定为当前帧时间戳
     if (m_ddwAudioFramePTS < m_ddwAudioFrameBasePTS)
     {
+        CODEC_LOGD("m_ddwAudioFramePTS < m_ddwAudioFrameBasePTS \r\n");
         m_ptAudioFrame->pts = m_ddwAudioFrameBasePTS;
         m_ddwAudioFramePTS = m_ddwAudioFrameBasePTS + 1000 * m_ptAudioFrame->nb_samples / m_ptAudioFrame->sample_rate;
     }
@@ -451,4 +462,264 @@ int AudioRawHandle::InitAudioFrame(AVCodecContext *i_ptDstEncodeCtx,int i_iFrame
     return 0;
 }
 
+/*****************************************************************************
+-Fuction        : AudioRawFilter
+-Description    : 
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+AudioRawFilter::AudioRawFilter()
+{
+    m_ptFiltFrame = NULL;
+    m_ptBufferSrcCtx = NULL;//
+    m_ptBufferSinkCtx = NULL;//
+    m_ptFilterGraph = NULL;//
+}
+/*****************************************************************************
+-Fuction        : ~AudioRawFilter
+-Description    : ~AudioRawFilter
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+AudioRawFilter::~AudioRawFilter()
+{
+    if(NULL!=m_ptFilterGraph)
+    {
+        avfilter_graph_free(&m_ptFilterGraph);
+        m_ptFilterGraph=NULL;
+    }
+    if(NULL!=m_ptFiltFrame)
+    {
+        av_frame_free(&m_ptFiltFrame);
+        m_ptFiltFrame=NULL;
+    }
+}
+/*****************************************************************************
+-Fuction        : Init
+-Description    : FilterInit
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioRawFilter::Init(AVCodecContext *i_ptDecodeCtx,AVCodecContext* i_ptEncodeCtx)
+{
+    int iRet = -1;
+	char args[256];
+    char src_ch_layout[64];
+    char filter_descr[256];
+    char dst_ch_layout[64];
+
+
+    if(NULL==i_ptDecodeCtx||NULL==i_ptEncodeCtx)
+    {
+        CODEC_LOGE("NULL==i_ptDecodeCtx||NULL==i_ptEncodeCtx err \r\n");
+        return iRet;
+    }
+	if (i_ptDecodeCtx->codec_type != AVMEDIA_TYPE_AUDIO)
+    {
+        CODEC_LOGE("i_ptDecodeCtx->codec_type != AVMEDIA_TYPE_AUDIO err \r\n");
+        return iRet;
+    }
+    
+    AVFilterInOut *outputs = avfilter_inout_alloc();
+    AVFilterInOut *inputs = avfilter_inout_alloc();
+    m_ptFilterGraph = avfilter_graph_alloc();
+    if (!outputs || !inputs || !m_ptFilterGraph) 
+    {
+        if (outputs) 
+        {
+            avfilter_inout_free(&outputs);
+        }
+        if (inputs) 
+        {
+            avfilter_inout_free(&inputs);
+        }
+        if (m_ptFilterGraph) 
+        {
+            avfilter_graph_free(&m_ptFilterGraph);
+        }
+        CODEC_LOGE("avfilter_graph_alloc err \r\n");
+        return iRet;
+    }
+    const AVFilter *buffersrc = avfilter_get_by_name("abuffer");
+    const AVFilter *buffersink = avfilter_get_by_name("abuffersink");
+	if (!buffersrc || !buffersink)
+	{
+        CODEC_LOGE("avfilter_get_by_name err \r\n");
+        return iRet;
+	}
+	
+	/*snprintf(args, sizeof(args),"time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channels=%d:channel_layout=0x%I64x",
+		i_ptDecodeCtx->time_base.num, i_ptDecodeCtx->time_base.den, i_ptDecodeCtx->sample_rate,
+		av_get_sample_fmt_name(i_ptDecodeCtx->sample_fmt),i_ptDecodeCtx->ch_layout.nb_channels,i_ptDecodeCtx->ch_layout.u.mask);*/
+
+    /* buffer audio source: the decoded frames from the decoder will be inserted here. */
+    if (i_ptDecodeCtx->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
+        av_channel_layout_default(&i_ptDecodeCtx->ch_layout, i_ptDecodeCtx->ch_layout.nb_channels);
+    memset(src_ch_layout,0,sizeof(src_ch_layout));
+    av_channel_layout_describe(&i_ptDecodeCtx->ch_layout, src_ch_layout, sizeof(src_ch_layout));
+    iRet = snprintf(args, sizeof(args),"time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channels=%d:channel_layout=%s",
+    i_ptDecodeCtx->time_base.num, i_ptDecodeCtx->time_base.den, i_ptDecodeCtx->sample_rate,av_get_sample_fmt_name(i_ptDecodeCtx->sample_fmt),i_ptDecodeCtx->ch_layout.nb_channels,src_ch_layout);
+
+    do
+    {
+        iRet = avfilter_graph_create_filter(&m_ptBufferSrcCtx, buffersrc, "in",args, NULL, m_ptFilterGraph);
+        if (iRet < 0) 
+        {
+            CODEC_LOGE( "Cannot create buffer source err \n");
+            break;
+        }
+        iRet = avfilter_graph_create_filter(&m_ptBufferSinkCtx, buffersink, "out",NULL, NULL, m_ptFilterGraph);
+        if (iRet < 0) 
+        {
+            CODEC_LOGE("Cannot create buffer sink err \n");
+            break;
+        }
+        iRet = av_opt_set_bin(m_ptBufferSinkCtx, "sample_fmts", (uint8_t*)&i_ptEncodeCtx->sample_fmt,sizeof(i_ptEncodeCtx->sample_fmt), AV_OPT_SEARCH_CHILDREN);
+        if (iRet < 0)
+        {
+            CODEC_LOGE("av_opt_set_bin sample_fmts err\n");
+            break;
+        }
+        iRet = av_opt_set_bin(m_ptBufferSinkCtx, "sample_rates", (uint8_t*)&i_ptEncodeCtx->sample_rate,sizeof(i_ptEncodeCtx->sample_rate), AV_OPT_SEARCH_CHILDREN);
+        if (iRet < 0)
+        {
+            CODEC_LOGE("av_opt_set_bin sample_rates err\n");
+            break;
+        }
+        memset(dst_ch_layout,0,sizeof(dst_ch_layout));
+        av_channel_layout_describe(&i_ptEncodeCtx->ch_layout, dst_ch_layout, sizeof(dst_ch_layout));
+        iRet = av_opt_set(m_ptBufferSinkCtx, "ch_layouts",dst_ch_layout,AV_OPT_SEARCH_CHILDREN);
+        if (iRet < 0)
+        {
+            CODEC_LOGE("av_opt_set ch_layouts err\n");
+            break;
+        }
+        inputs->name = av_strdup("out");
+        inputs->filter_ctx = m_ptBufferSinkCtx;
+        inputs->pad_idx = 0;
+        inputs->next = NULL;
+        outputs->name = av_strdup("in");
+        outputs->filter_ctx = m_ptBufferSrcCtx;
+        outputs->pad_idx = 0;
+        outputs->next = NULL;
+        if (!inputs->name || !outputs->name)
+        {
+            CODEC_LOGE("!inputs->name || !outputs->name err\n");
+            break;
+        }
+        snprintf(filter_descr,sizeof(filter_descr),"aresample=%d,aformat=sample_fmts=%s:channel_layouts=%s",i_ptEncodeCtx->sample_rate,av_get_sample_fmt_name(i_ptEncodeCtx->sample_fmt),dst_ch_layout);
+        iRet=avfilter_graph_parse_ptr(m_ptFilterGraph,filter_descr,&inputs,&outputs, NULL);//("aresample=%d", _resamplerate);//;"anull"
+        if (iRet < 0) 
+        {
+            CODEC_LOGE("avfilter_graph_parse_ptr err %s \r\n","anull");
+            break;
+        }
+        iRet=avfilter_graph_config(m_ptFilterGraph, NULL);
+        if (iRet < 0) 
+        {
+            CODEC_LOGE("avfilter_graph_config err %s \r\n","anull");
+            break;
+        }
+        iRet=0;
+    }while(0);
+    avfilter_inout_free(&inputs);
+    avfilter_inout_free(&outputs);
+
+    
+    m_ptFiltFrame = av_frame_alloc();
+    if(NULL==m_ptFiltFrame)
+    {
+        CODEC_LOGE("NULL==m_ptFrame err \r\n");
+        return iRet;
+    }
+    return iRet;
+}
+
+/*****************************************************************************
+-Fuction        : RawHandle
+-Description    : 
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioRawFilter::RawHandle(AVFrame *i_ptSrcAVFrame, int i_iFlags)
+{
+    int iRet = -1;
+
+    if(NULL==i_ptSrcAVFrame)
+    {
+        CODEC_LOGE("NULL==i_ptSrcAVFrame RawHandle err \r\n");
+        return iRet;
+    }
+    if (av_buffersrc_add_frame_flags(m_ptBufferSrcCtx, i_ptSrcAVFrame, i_iFlags) < 0) 
+    {
+        CODEC_LOGE("av_buffersrc_add_frame_flags err\n");
+        return iRet;
+    }
+    return 0;
+}
+/*****************************************************************************
+-Fuction        : GetFrame
+-Description    : 
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int AudioRawFilter::GetFrame(AVFrame *o_ptDstAVFrame) 
+{
+    int iRet = -1;
+
+    if(NULL==o_ptDstAVFrame)
+    {
+        CODEC_LOGE("NULL==o_ptDstAVFrame RawHandle err \r\n");
+        return iRet;
+    }
+    /* pull filtered frames from the filtergraph */
+    iRet = av_buffersink_get_frame(m_ptBufferSinkCtx, m_ptFiltFrame);
+    if (iRet == AVERROR(EAGAIN) || iRet == AVERROR_EOF)
+    {
+        iRet=0;
+        CODEC_LOGD("AudioRawFilter AVERROR_EOF,frame->pts%lld, nb_samples%d,\r\n", m_ptFiltFrame->pts, m_ptFiltFrame->nb_samples);
+        return iRet;
+    }
+    if (iRet < 0)
+    {
+        return iRet;
+    }
+    iRet=av_frame_ref(o_ptDstAVFrame,m_ptFiltFrame);
+    if (iRet < 0)
+    {
+        CODEC_LOGE("av_frame_ref err \r\n");
+        av_frame_unref(m_ptFiltFrame);
+        return iRet;
+    }
+    iRet=av_frame_copy(o_ptDstAVFrame,m_ptFiltFrame);
+    if (iRet < 0)
+    {
+        CODEC_LOGE("av_frame_copy err \r\n");
+        av_frame_unref(o_ptDstAVFrame);
+    }
+    av_frame_unref(m_ptFiltFrame);
+    
+    CODEC_LOGD("AudioRawFilter ,frame->pts%lld, nb_samples%d,\r\n", o_ptDstAVFrame->pts, o_ptDstAVFrame->nb_samples);
+    return o_ptDstAVFrame->nb_samples;
+}
 

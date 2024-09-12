@@ -23,6 +23,8 @@ extern "C" {
 #include "libavutil/frame.h"
 #include "libavutil/opt.h"
 #include "libswresample/swresample.h"
+#include "libavfilter/buffersink.h"
+#include "libavfilter/buffersrc.h"
 }
 
 
@@ -30,7 +32,7 @@ extern "C" {
 /*****************************************************************************
 -Class          : AudioRawHandle
 -Description    : AudioRawHandle
-* Modify Date     AudioRawHandleAuthor           Modification
+* Modify Date     Version             Author           Modification
 * -----------------------------------------------
 * 2022/01/11      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
@@ -58,6 +60,29 @@ private:
     int64_t m_ddwAudioFrameBasePTS;
 };
 
+
+/*****************************************************************************
+-Class          : AudioRawFilter
+-Description    : AudioRawFilter
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2022/01/11      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+class AudioRawFilter
+{
+public:
+	AudioRawFilter();
+	virtual ~AudioRawFilter();
+    int Init(AVCodecContext *i_ptDecodeCtx,AVCodecContext* i_ptEncodeCtx);
+    int RawHandle(AVFrame *i_ptSrcAVFrame, int i_iFlags=0);
+    int GetFrame(AVFrame *o_ptDstAVFrame);
+private:
+        
+    AVFrame     *m_ptFiltFrame;//存储一帧解码后像素（采样）数据
+    AVFilterContext *m_ptBufferSrcCtx;
+    AVFilterContext *m_ptBufferSinkCtx;
+    AVFilterGraph *m_ptFilterGraph;
+};
 
 
 
