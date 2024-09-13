@@ -1,0 +1,19 @@
+{
+    "src": {
+        "path": "H265AAC.flv",
+        "VideoCodec": "h265",
+        "AudioCodec": "aac",
+        "FrameRate": 25
+    },
+    "dst": {
+        "path": "2H264G711A.flv",
+        "VideoCodec": "h264",
+        "AudioCodec": "g711a",
+        "FrameRate": 25,
+        "SampleRate": 8000,
+        "VideoWidth": 640,
+        "VideoHeight": 480,
+        "AudioChannels": 1,
+        "AudioFrameSize": 160
+    }
+}
