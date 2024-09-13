@@ -26,6 +26,15 @@ function GenerateCmakeFile()
 }
 function BuildLib()
 {
+    LibPath=$PWD/../lib/linux/$1
+    if [ -e "$LibPath" ]; then
+        echo "$LibPath exist! "
+    else
+        cd $PWD/../lib/linux
+        tar -xvf $1.tar.gz
+        cd -
+    fi  
+    
     echo -e "Start building src..."
     OutputPath="./build"
     if [ -e "$OutputPath" ]; then
