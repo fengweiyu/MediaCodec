@@ -169,7 +169,7 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
         return iRet;
     }
     m_ddwAudioFrameBasePTS=m_ptAVFrame->pts;
-    if(0 == m_ddwAudioFramePTS)//理论上时间戳初始化一次就好后面需要重新计算//实测还是得使用外部传入的时间戳，否则时间戳会被加大，导致音频放的很慢
+    if(0 == m_ddwAudioFramePTS)//理论上时间戳初始化一次就好后面需要重新计算
     {//第一次使用外面传进来的帧时间戳，后续使用自己计算的时间戳
         m_ddwAudioFramePTS=m_ddwAudioFrameBasePTS;//因为转码，特别是采样率变化的转码，外部传入的时间戳是不准的
     }//有时会出现输入帧但是不输出帧的情况，因为样本数可能不够要更多数据，也有可能输入一帧数据太多，输出就会有多帧
@@ -192,7 +192,7 @@ int AudioRawHandle::RawHandle(AVFrame *m_ptAVFrame,AVCodecContext *i_ptDstEncode
         //CODEC_LOGE("Could not convert input samples (error '%s')\n",av_err2str(iSampleNum));//error: taking address of temporary array
         return iSampleNum;
     }
-    CODEC_LOGD("swr_convert nb_samples%d iSampleNum%d m_iCurConvertedSamplesSize%d\n",m_ptAVFrame->nb_samples,iSampleNum,m_iCurConvertedSamplesSize);
+    //CODEC_LOGD("swr_convert nb_samples%d iSampleNum%d m_iCurConvertedSamplesSize%d\n",m_ptAVFrame->nb_samples,iSampleNum,m_iCurConvertedSamplesSize);
     
     /* Make the FIFO as large as it needs to be to hold both, the old and the
      * new samples. */
