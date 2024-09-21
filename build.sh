@@ -15,6 +15,11 @@ if [ $# == 0 ]; then
     exit -1
 else
     CopyPwd=$PWD/build/linux/$1
+    if [ -e "$CopyPwd" ]; then
+        echo "$CopyPwd exist! "
+    else
+        mkdir -p $CopyPwd
+    fi  
     cd src
     sh build.sh $1 $CopyPwd
     if [ $? -ne 0 ]; then
