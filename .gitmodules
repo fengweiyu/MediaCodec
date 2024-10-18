@@ -1,0 +1,3 @@
+[submodule "demo/media"]
+	path = demo/media
+	url = https://github.com/fengweiyu/media.git
