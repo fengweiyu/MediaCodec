@@ -181,7 +181,7 @@ int AudioDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
 
     while (dwFrameLen > 0) 
     {
-        av_init_packet(m_ptPacket);
+        av_packet_unref(m_ptPacket);//av_init_packet(m_ptPacket);//attribute_deprecated
         m_ptPacket->data = pbFrameData;
         m_ptPacket->size = dwFrameLen;
         m_ptPacket->pts = ddwPTS;
@@ -354,9 +354,9 @@ int AudioDecode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
 {
     const AVChannelLayout *p=NULL, *best_ch_layout=NULL;
     int best_nb_channels = 0;
-    AVChannelLayout ch1_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;//首选单声道
-    AVChannelLayout ch2_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;//双声道
-    AVChannelLayout ch3_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_2POINT1;//三声道
+    AVChannelLayout ch1_layout = AV_CHANNEL_LAYOUT_MONO;//首选单声道
+    AVChannelLayout ch2_layout = AV_CHANNEL_LAYOUT_STEREO;//双声道
+    AVChannelLayout ch3_layout = AV_CHANNEL_LAYOUT_2POINT1;//三声道
 
     switch(i_iChannels)
     {

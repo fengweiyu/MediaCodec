@@ -176,7 +176,7 @@ int AudioEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
         {
             iRet=iFrameLen;
             CODEC_LOGD("m_ptPacket %lld,Packet->size %d AVFrame->nb_samples%d, data%p ,iRet == AVERROR_EOF %d\r\n",m_ptPacket->pts, 
-            m_ptPacket->size,i_ptAVFrame->pkt_size, i_ptAVFrame->nb_samples,m_ptPacket->data,iRet == AVERROR_EOF?1:0);
+            m_ptPacket->size,i_ptAVFrame->nb_samples,m_ptPacket->data,iRet == AVERROR_EOF?1:0);
             break;
         }
         else if (iRet < 0) 
@@ -311,9 +311,9 @@ int AudioEncode::SelectChannelLayout(const AVCodec *codec, AVChannelLayout *dst,
 {
     const AVChannelLayout *p=NULL, *best_ch_layout=NULL;
     int best_nb_channels = 0;
-    AVChannelLayout ch1_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;//首选单声道
-    AVChannelLayout ch2_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;//双声道
-    AVChannelLayout ch3_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_2POINT1;//三声道
+    AVChannelLayout ch1_layout = AV_CHANNEL_LAYOUT_MONO;//首选单声道
+    AVChannelLayout ch2_layout = AV_CHANNEL_LAYOUT_STEREO;//双声道
+    AVChannelLayout ch3_layout = AV_CHANNEL_LAYOUT_2POINT1;//三声道
 
     switch(i_iChannels)
     {

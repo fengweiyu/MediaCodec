@@ -210,7 +210,7 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
 
     while (dwFrameLen > 0) 
     {
-        av_init_packet(m_ptPacket);
+        av_packet_unref(m_ptPacket);//av_init_packet(m_ptPacket);//attribute_deprecated
         m_ptPacket->data = pbFrameData;
         m_ptPacket->size = dwFrameLen;
         m_ptPacket->pts = ddwPTS;

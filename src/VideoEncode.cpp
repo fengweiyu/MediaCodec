@@ -241,7 +241,7 @@ int VideoEncode::Encode(AVFrame *i_ptAVFrame,unsigned char * o_pbFrameData,unsig
             av_packet_unref(m_ptPacket);
             return iRet;
         }
-        CODEC_LOGD("enc size %d,%d, pts%lld dts%lld,data%p ,%d\r\n",m_ptPacket->size,i_ptAVFrame->pkt_size,m_ptPacket->pts,m_ptPacket->dts,m_ptPacket->data,m_ptPacket->flags);
+        CODEC_LOGD("enc size %d,i_ptAVFrame->pkt_size%d, pts%lld dts%lld,data%p ,%d\r\n",m_ptPacket->size,i_ptAVFrame->linesize[0],m_ptPacket->pts,m_ptPacket->dts,m_ptPacket->data,m_ptPacket->flags);
         //av_packet_unref(m_ptPacket);
         if(iFrameLen>0)
         {//暂不支持多帧取出，后续优化为数组或者list
