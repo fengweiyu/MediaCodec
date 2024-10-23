@@ -4,7 +4,7 @@ function PrintUsage()
 {
     echo -e "Usage:"
     echo -e "./build.sh $ToolChain"
-    echo -e "ToolChain: arm-linux/x86/x64"
+    echo -e "ToolChain: cygwin/arm-linux/x86/x64"
     echo -e "EGG:"
     echo -e "./build.sh x86"
     echo -e " or ./build.sh x64"
@@ -15,6 +15,9 @@ if [ $# == 0 ]; then
     exit -1
 else
     CopyPwd=$PWD/build/linux/$1
+    if [ $1 == cygwin ]; then
+        CopyPwd=$PWD/build/win/$1
+    fi
     if [ -e "$CopyPwd" ]; then
         echo "$CopyPwd exist! "
     else

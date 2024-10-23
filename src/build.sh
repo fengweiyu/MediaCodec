@@ -14,7 +14,7 @@ function GenerateCmakeFile()
 #   mkdir -p build
     CmakeFile="$2/ToolChain.cmake"
     echo "SET(CMAKE_SYSTEM_NAME \"Linux\")" > $CmakeFile
-    if [ $1 == x86 -o $1 == x64 ]; then
+    if [ $1 == x86 -o $1 == x64 -o $1 == cygwin ]; then
         echo "SET(CMAKE_C_COMPILER \"gcc\")" >> $CmakeFile  
         echo "SET(CMAKE_CXX_COMPILER \"g++\")" >> $CmakeFile        
     else
@@ -26,11 +26,14 @@ function GenerateCmakeFile()
 }
 function BuildLib()
 {
-    LibPath=$PWD/../lib/linux/$1
-    if [ -e "$LibPath" ]; then
-        echo "$LibPath exist! "
+    LibPath=$PWD/../lib/linux
+    if [ $1 == cygwin ]; then
+        LibPath=$PWD/../lib/win
+    fi
+    if [ -e "$LibPath/$1" ]; then
+        echo "$LibPath/$1 exist! "
     else
-        cd $PWD/../lib/linux
+        cd $LibPath
         tar -xvf $1.tar.gz
         cd -
     fi  
@@ -88,7 +91,10 @@ function CopyLib()
     cp $CurPwd/include . -rf
 
 
-
+    ThirdLibPath=$CurPwd/../lib/linux
+    if [ $2 == cygwin ]; then
+        ThirdLibPath=$CurPwd/../lib/win
+    fi
     cd $1
     rm ./ThirdLib -rf
     mkdir ThirdLib
@@ -104,14 +110,14 @@ function CopyLib()
 #    mkdir x265/include
     mkdir fdk-aac
     mkdir fdk-aac/lib
-    cp $CurPwd/../lib/linux/$2/ffmpeg-7.0.1/lib/*.a $1/ThirdLib/ffmpeg/lib -rf
-    cp $CurPwd/../lib/linux/$2/ffmpeg-7.0.1/include $1/ThirdLib/ffmpeg -rf
-    cp $CurPwd/../lib/linux/$2/x264-stable/lib/*.a $1/ThirdLib/x264/lib -rf
-    cp $CurPwd/../lib/linux/$2/x264-stable/include $1/ThirdLib/x264 -rf
-    cp $CurPwd/../lib/linux/$2/x265_2.7/lib/*.a $1/ThirdLib/x265/lib -rf
-    cp $CurPwd/../lib/linux/$2/x265_2.7/include $1/ThirdLib/x265 -rf
-    cp $CurPwd/../lib/linux/$2/fdk-aac-2.0.3/lib/*.a $1/ThirdLib/fdk-aac/lib -rf
-    cp $CurPwd/../lib/linux/$2/fdk-aac-2.0.3/include $1/ThirdLib/fdk-aac -rf
+    cp $ThirdLibPath/$2/ffmpeg-7.0.1/lib/*.a $1/ThirdLib/ffmpeg/lib -rf
+    cp $ThirdLibPath/$2/ffmpeg-7.0.1/include $1/ThirdLib/ffmpeg -rf
+    cp $ThirdLibPath/$2/x264-stable/lib/*.a $1/ThirdLib/x264/lib -rf
+    cp $ThirdLibPath/$2/x264-stable/include $1/ThirdLib/x264 -rf
+    cp $ThirdLibPath/$2/x265_2.7/lib/*.a $1/ThirdLib/x265/lib -rf
+    cp $ThirdLibPath/$2/x265_2.7/include $1/ThirdLib/x265 -rf
+    cp $ThirdLibPath/$2/fdk-aac-2.0.3/lib/*.a $1/ThirdLib/fdk-aac/lib -rf
+    cp $ThirdLibPath/$2/fdk-aac-2.0.3/include $1/ThirdLib/fdk-aac -rf
     
     mkdir freetype
     mkdir freetype/lib
@@ -121,15 +127,22 @@ function CopyLib()
     mkdir libxml2/lib
     mkdir libfontconfig
     mkdir libfontconfig/lib
-    cp $CurPwd/../lib/linux/$2/freetype-2.13.2/lib/*.a $1/ThirdLib/freetype/lib -rf
-    cp $CurPwd/../lib/linux/$2/freetype-2.13.2/include $1/ThirdLib/freetype -rf
-    cp $CurPwd/../lib/linux/$2/harfbuzz-8.5.0/lib/*.a $1/ThirdLib/harfbuzz/lib -rf
-    cp $CurPwd/../lib/linux/$2/harfbuzz-8.5.0/include $1/ThirdLib/harfbuzz -rf
-    cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/lib/*.a $1/ThirdLib/libxml2/lib -rf
-    cp $CurPwd/../lib/linux/$2/libxml2-2.9.12/include $1/ThirdLib/libxml2 -rf
-    cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/lib/*.a $1/ThirdLib/libfontconfig/lib -rf
-    cp $CurPwd/../lib/linux/$2/libfontconfig-5.1.0/include $1/ThirdLib/libfontconfig -rf
+    mkdir libiconv
+    mkdir libiconv/lib
+    cp $ThirdLibPath/$2/freetype-2.13.2/lib/*.a $1/ThirdLib/freetype/lib -rf
+    cp $ThirdLibPath/$2/freetype-2.13.2/include $1/ThirdLib/freetype -rf
+    cp $ThirdLibPath/$2/harfbuzz-8.5.0/lib/*.a $1/ThirdLib/harfbuzz/lib -rf
+    cp $ThirdLibPath/$2/harfbuzz-8.5.0/include $1/ThirdLib/harfbuzz -rf
+    cp $ThirdLibPath/$2/libxml2-2.9.12/lib/*.a $1/ThirdLib/libxml2/lib -rf
+    cp $ThirdLibPath/$2/libxml2-2.9.12/include $1/ThirdLib/libxml2 -rf
+    cp $ThirdLibPath/$2/libfontconfig-5.1.0/lib/*.a $1/ThirdLib/libfontconfig/lib -rf
+    cp $ThirdLibPath/$2/libfontconfig-5.1.0/include $1/ThirdLib/libfontconfig -rf
+    cp $ThirdLibPath/$2/libiconv-1.17/lib/*.a $1/ThirdLib/libiconv/lib -rf
+    cp $ThirdLibPath/$2/libiconv-1.17/include $1/ThirdLib/libiconv -rf
     cp $CurPwd/../lib/msyh.ttf $1
+    if [ $2 == cygwin ]; then
+        cp $CurPwd/../lib/cygwin1.dll $1
+    fi
     cd $CurPwd
 }
 

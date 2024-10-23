@@ -14,7 +14,7 @@ function GenerateCmakeFile()
 #   mkdir -p build
     CmakeFile="$2/ToolChain.cmake"
     echo "SET(CMAKE_SYSTEM_NAME \"Linux\")" > $CmakeFile
-    if [ $1 == x86 ]; then
+    if [ $1 == x86 -o $1 == x64 -o $1 == cygwin ]; then
         echo "SET(CMAKE_C_COMPILER \"gcc\")" >> $CmakeFile  
         echo "SET(CMAKE_CXX_COMPILER \"g++\")" >> $CmakeFile    
     else
@@ -44,7 +44,7 @@ function BuildLib()
 
     cd $OutputPath/build
     cmakeOption=-DBUILD_SHARED_AND_STATIC_LIBS=ON
-    if [ $1 == x86 -o $1 == x64 ]; then
+    if [ $1 == x86 -o $1 == x64 -o $1 == cygwin ]; then
         cmakeOption=-DBUILD_SHARED_AND_STATIC_LIBS=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
     else
         cmakeOption=-DBUILD_SHARED_AND_STATIC_LIBS=ON -DCMAKE_C_COMPILER=$1-gcc -DCMAKE_CXX_COMPILER=$1-g++
@@ -85,7 +85,11 @@ function CopyLib()
     fi
     
     cd cJSON
-    cp $CurPwd/cJSON-1.7.12/build/install/lib64/libcjson.a .
+    if [ $2 == cygwin ]; then
+        cp $CurPwd/cJSON-1.7.12/build/install/lib/libcjson.a .
+    else
+        cp $CurPwd/cJSON-1.7.12/build/install/lib64/libcjson.a .
+    fi
     cp $CurPwd/cJSON-1.7.12/build/install/include/cjson/cJSON.h .
     cd $CurPwd
 }
@@ -96,7 +100,7 @@ if [ $# == 0 ]; then
 else
 #   GenerateCmakeFile $1
     BuildLib $1
-    CopyLib $2
+    CopyLib $2 $1
 fi
 
 

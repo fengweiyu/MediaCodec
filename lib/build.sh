@@ -1,4 +1,6 @@
 #!/bin/bash
+#在cygwin编译使用，注意cygwin要安装好gcc-g++ 12,make,cmake,nasm-2.13以上，pkt-config 2.3.0 libtool 2.5.3  gtk-doc 1.33
+#cygwin注意环境编译设置不要带有空格，否则编译会报错(sh Program 等错误)，cygwin中执行echo $PATH查看环境变量，然后设置环境变量export PATH=/usr/local/bin:/usr/bin就可以了
 
 function PrintUsage()
 {
@@ -14,7 +16,7 @@ function GenerateCmakeFile()
 #   mkdir -p build
     CmakeFile="$2/ToolChain.cmake"
     echo "SET(CMAKE_SYSTEM_NAME \"Linux\")" > $CmakeFile
-    if [ $1 == x86 -o $1 == x64 ]; then
+    if [ $1 == x86 -o $1 == x64 -o $1 == cygwin ]; then
         echo "SET(CMAKE_C_COMPILER \"gcc\")" >> $CmakeFile  
         echo "SET(CMAKE_CXX_COMPILER \"g++\")" >> $CmakeFile        
     else
@@ -29,6 +31,9 @@ function BuildLib()
     echo -e "Start building lib..."
     CurPwd=$PWD
     OutputPath="$CurPwd/linux/$1"
+    if [ $1 == cygwin ]; then
+        OutputPath="$CurPwd/win/$1"
+    fi
 #<<COMMENT
     if [ -e "$OutputPath" ]; then
         rm $OutputPath -rf
@@ -64,6 +69,11 @@ function BuildLib()
         rm $harfbuzzName -rf
     fi  
     tar -xf $harfbuzzName.tar.xz
+    iconvName="libiconv-1.17"
+    if [ -e "$iconvName" ]; then
+        rm $iconvName -rf
+    fi  
+    tar -xf $iconvName.tar.gz
     aacName="fdk-aac-2.0.3"
     if [ -e "$aacName" ]; then
         rm $aacName -rf
@@ -87,20 +97,25 @@ function BuildLib()
     tar -xf $fontconfigName.tar.gz
     
     
+    if [ $1 == cygwin ]; then
+        export PATH=/usr/local/bin:/usr/bin #防止cygwin环境编译设置有空格导致的编译报错
+    fi
+    
+    
     cd $x265Name/build/linux
 #   cmake -DCMAKE_TOOLCHAIN_FILE=crosscompile.cmake -G "Unix Makefiles" ../../source && ccmake ../../source #cmake过程中提示界面依次输入c e g即可安装到指定目录
-    cmake -DCMAKE_INSTALL_PREFIX=$OutputPath/$x265Name -G "Unix Makefiles" ../../source && ccmake ../../source
-    make -j4;make install
+    cmake -DCMAKE_INSTALL_PREFIX=$OutputPath/$x265Name -G "Unix Makefiles" ../../source 
+    make -j6;make install
     cd -
     cd $x264Name
 #   ./configure  --host=aarch64-apple-darwin --prefix=/opt/local --enable-shared --enable-static --disable-asm 
     ./configure --prefix=$OutputPath/$x264Name --enable-shared --enable-static
-    make -j4;make install
+    make -j6;make install
     cd -
     
     cd $freetypeName
     ./configure --prefix=$OutputPath/$freetypeName
-    make -j4;make install
+    make -j6;make install
     cd -
     cd $harfbuzzName
     sh autogen.sh 
@@ -108,7 +123,10 @@ function BuildLib()
     ./configure --prefix=$OutputPath/$harfbuzzName --enable-static --with-glib=no --with-cairo=no --with-chafa=no --with-icu=no --with-freetype=yes FREETYPE_CFLAGS=-I$OutputPath/$freetypeName/include/freetype2 FREETYPE_LIBS="-L$OutputPath/$freetypeName/lib -lfreetype"
 #    mkdir build;cd build
 #    cmake -DCMAKE_INSTALL_PREFIX=$OutputPath/$harfbuzzName ..
-    make -j4;make install
+    if [ $1 == cygwin ]; then
+        cp ../VarCompositeGlyph.hh ./src/OT/glyf/VarCompositeGlyph.hh -f
+    fi
+    make -j6;make install
 #    cp ./src/hb-ft.h $OutputPath/$harfbuzzName/include/harfbuzz  #因为其不会主动安装这个头文件，ffmpeg又需要，所以暂时这么拷贝
     cd $CurPwd
 
@@ -126,18 +144,29 @@ function BuildLib()
     freetypeLIB="$freetypeLIB_DIR/lib"
 
     cd $xml2Name
-    ./configure --prefix=$OutputPath/$xml2Name -without-python -without-zlib
-    make -j4;make install
+    if [ $1 == cygwin ]; then
+        ./configure --prefix=$OutputPath/$xml2Name -without-python -without-zlib --enable-static --disable-shared #解决 编译器会以连接动态库的方式去连接静态库(undefined reference to `__imp xxx)
+    else
+        ./configure --prefix=$OutputPath/$xml2Name -without-python -without-zlib
+    fi
+    make -j6;make install
     cd -
     export PKG_CONFIG_PATH=$freetypeLIB/pkgconfig:$OutputPath/$xml2Name/lib/pkgconfig:$PKG_CONFIG_PATH
     cd $fontconfigName
-    ./configure --prefix=$OutputPath/$fontconfigName --enable-libxml2 --enable-static
-    make -j4;make install
+    if [ $1 == cygwin ]; then
+        ./configure --prefix=$OutputPath/$fontconfigName --enable-libxml2 --enable-static --disable-shared 
+    else
+        ./configure --prefix=$OutputPath/$fontconfigName --enable-libxml2 --enable-static
+    fi
+    make -j6;make install
     cd -
-    
+    cd $iconvName
+    ./configure --prefix=$OutputPath/$iconvName --enable-static
+    make -j6;make install
+    cd -
     cd $aacName
     ./configure --prefix=$OutputPath/$aacName
-    make -j4;make install
+    make -j6;make install
     cd -
     export PKG_CONFIG_PATH=$OutputPath/$fontconfigName/lib/pkgconfig:$OutputPath/$aacName/lib/pkgconfig:$OutputPath/$harfbuzzName/lib/pkgconfig:$freetypeLIB/pkgconfig:$x264LIB/pkgconfig:$x265LIB/pkgconfig:$PKG_CONFIG_PATH #找到 x264 库的 pkg-config 文件
     cd $ffmpegName
@@ -148,7 +177,10 @@ function BuildLib()
 #NASM 是 x86 平台汇编器，不需要交叉编译。若是 arm 等其他平台，交叉编译工具链中包含有对应的汇编器，则交叉编译 ffmpeg 时需要 --disable-x86asm 选项
 #./configure --prefix=/mnt/d/linuxCode/third/ffmpeglinux --arch=x86_64 --enable-static --enable-gpl --enable-debug --enable-libx264 --enable-libx265 --enable-libvpx --enable-vaapi --disable-x86asm asm汇编加速 会导致scale滤镜花屏(ffmpeg 5.0以前的版本不会,编译要装nasm,否则编译不过,最终链接的程序不需要链接asm库 即无需交叉编译asm库)
     ./configure --prefix=$OutputPath/$ffmpegName --pkg-config-flags="--static" --arch=x86_64 $ADD_FEATURE 
-    make -j4;make install
+    if [ $1 == cygwin ]; then
+        cp ../wchar_filename.h ./libavutil/wchar_filename.h -f
+    fi
+    make -j6;make install
     cd -
     
     echo -e "export PKG_CONFIG_PATH=$PKG_CONFIG_PATH "

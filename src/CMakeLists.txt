@@ -16,6 +16,12 @@ SET(CMAKE_CXX_FLAGS "-g -std=c++11 -pthread ")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (CMAKE_ToolChain STREQUAL "cygwin")  
+    set(CMAKE_HOST_NAME win)
+else ()  
+    set(CMAKE_HOST_NAME linux)
+endif () 
+
 SET(src_list
     MediaTranscodeInf.cpp
 	MediaTranscode.cpp
@@ -30,7 +36,7 @@ SET(src_list
 	)		
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/../lib/linux/x86/ffmpeg-7.0.1/include
+    ${PROJECT_SOURCE_DIR}/../lib/${CMAKE_HOST_NAME}/${CMAKE_ToolChain}/ffmpeg-7.0.1/include
 	)
 ADD_LIBRARY(MediaTranscode_static STATIC ${src_list})
 SET_TARGET_PROPERTIES(MediaTranscode_static PROPERTIES OUTPUT_NAME MediaTranscode)
