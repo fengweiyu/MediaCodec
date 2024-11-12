@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="demo">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{933b51d0-7478-4676-a885-320323a8e1ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\include">
+      <UniqueIdentifier>{8a977014-d34b-40c7-b474-3cdc504fade3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="demo\json">
+      <UniqueIdentifier>{f810f5de-2e21-4d39-a143-8b32cfe1112c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\demo\main.cpp">
+      <Filter>demo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\demo\MediaTranscodeDemo.cpp">
+      <Filter>demo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\demo\json\cJSON.c">
+      <Filter>demo\json</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\demo\MediaTranscodeDemo.h">
+      <Filter>demo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\include\MediaTranscodeCom.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\include\MediaTranscodeInf.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\demo\json\cJSON.h">
+      <Filter>demo\json</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

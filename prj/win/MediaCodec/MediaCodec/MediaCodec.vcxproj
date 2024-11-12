@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{588f375e-54a9-42f2-b25c-f31880786c64}</ProjectGuid>
+    <RootNamespace>MediaCodec</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\..\..\build\win\x86</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\..\..\build\win\x64</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\..\src\include;..\..\..\..\demo;..\..\..\..\demo\json;..\..\..\..\demo\media\src\include;..\..\..\..\lib\win\x64\x264-stable\include;..\..\..\..\lib\win\x64\x265_2.7\include;..\..\..\..\lib\win\x64\fdk-aac-2.0.3\include;..\..\..\..\lib\win\x64\freetype-2.13.2\include;..\..\..\..\lib\win\x64\harfbuzz-8.5.0\include;..\..\..\..\lib\win\x64\libxml2-2.9.12\include;..\..\..\..\lib\win\x64\libfontconfig-5.1.0\include;..\..\..\..\lib\win\x64\ffmpeg-7.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\..\build\win\x86\lib;..\..\..\..\demo\media\build\win\x86\lib;..\..\..\..\lib\win\x64\ffmpeg-7.0.1\lib;..\..\..\..\lib\win\x64\harfbuzz-8.5.0\lib;..\..\..\..\lib\win\x64\freetype-2.13.2\lib;..\..\..\..\lib\win\x64\libfontconfig-5.1.0\lib;..\..\..\..\lib\win\x64\libxml2-2.9.12\lib;..\..\..\..\lib\win\x64\x264-stable\lib;..\..\..\..\lib\win\x64\x265_2.7\lib;..\..\..\..\lib\win\x64\fdk-aac-2.0.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmedia.lib;libMediaCodec.lib;libavcodec.a;libavfilter.a;libavformat.a;libavutil.a;libswscale.a;libswresample.a;libavdevice.a;libharfbuzz.a;libharfbuzz-subset.a;libharfbuzz-cairo.a;libfreetype.a;libfontconfig.a;libxml2.a;libx265.a;libx264.a;libfdk-aac.a;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WIN32;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\..\src\include;..\..\..\..\demo;..\..\..\..\demo\json;..\..\..\..\demo\media\src\include;..\..\..\..\lib\win\x64msvc\x264\include;..\..\..\..\lib\win\x64msvc\x265\include;..\..\..\..\lib\win\x64msvc\fdk-aac\include;..\..\..\..\lib\win\x64msvc\freetype\include;..\..\..\..\lib\win\x64msvc\harfbuzz\include;..\..\..\..\lib\win\x64msvc\libxml2\include;..\..\..\..\lib\win\x64msvc\fontconfig\include;..\..\..\..\lib\win\x64msvc\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\..\build\win\x64\lib;..\..\..\..\demo\media\build\win\x64\lib;..\..\..\..\lib\win\x64msvc\ffmpeg\lib;..\..\..\..\lib\win\x64msvc\harfbuzz\lib;..\..\..\..\lib\win\x64msvc\freetype\lib;..\..\..\..\lib\win\x64msvc\x264\lib;..\..\..\..\lib\win\x64msvc\x265\lib;..\..\..\..\lib\win\x64msvc\fdk-aac\lib;..\..\..\..\lib\win\x64msvc\zlib\lib;..\..\..\..\lib\win\x64msvc\opus\lib;..\..\..\..\lib\win\x64msvc\libpng\lib;..\..\..\..\lib\win\x64msvc\brotli\lib;..\..\..\..\lib\win\x64msvc\bzip2\lib;..\..\..\..\lib\win\x64msvc\expat\lib;..\..\..\..\lib\win\x64msvc\fontconfig\lib;..\..\..\..\lib\win\x64msvc\libxml2\lib;..\..\..\..\lib\win\x64msvc\libiconv\lib;..\..\..\..\lib\win\x64msvc\liblzma\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmedia.lib;libMediaCodec.lib;avcodec.lib;avfilter.lib;avformat.lib;avutil.lib;swscale.lib;swresample.lib;avdevice.lib;freetype.lib;libexpatdMT.lib;fontconfig.lib;harfbuzz.lib;harfbuzz-subset.lib;libxml2.lib;lzma.lib;x265-static.lib;libx264.lib;fdk-aac.lib;opus.lib;libpng16.lib;iconv.lib;charset.lib;bz2d.lib;brotlicommon.lib;brotlidec.lib;brotlienc.lib;zlib.lib;WS2_32.lib;Secur32.lib;Bcrypt.lib;Strmiids.lib;mfplat.lib;mfuuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+    </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\demo\json\cJSON.c" />
+    <ClCompile Include="..\..\..\..\demo\main.cpp" />
+    <ClCompile Include="..\..\..\..\demo\MediaTranscodeDemo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\demo\json\cJSON.h" />
+    <ClInclude Include="..\..\..\..\demo\MediaTranscodeDemo.h" />
+    <ClInclude Include="..\..\..\..\src\include\MediaTranscodeCom.h" />
+    <ClInclude Include="..\..\..\..\src\include\MediaTranscodeInf.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
