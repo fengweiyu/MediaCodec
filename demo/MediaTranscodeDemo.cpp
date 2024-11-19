@@ -586,7 +586,7 @@ int MediaTranscodeDemo :: CreateCodecFrameDefault(const char * i_strDstFileName,
     }
     else
     {
-        CODEC_LOGW("i_strDstFileName unknow,use default enc %d \r\n",i_strDstFileName);
+        CODEC_LOGW("i_strDstFileName unknow,use default enc %s \r\n",i_strDstFileName);
         i_ptCodecFrame->eEncType=CODEC_TYPE_H264;
     }
     i_ptCodecFrame->pbFrameBuf=pbCodecBuf;
