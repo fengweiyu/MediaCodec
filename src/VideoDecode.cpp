@@ -259,7 +259,7 @@ int VideoDecode::Decode(unsigned char * i_pbFrameData,unsigned int  i_dwFrameLen
             }
             /* the picture is allocated by the decoder. no need to
                free it */
-            CODEC_LOGD("dec frame->linesize[0]%d,pts %lld,ddwPTS,ddwDTS%lld,%lld, data[0]%x,width%d, height%d \r\n", m_ptFrame->linesize[0],m_ptFrame->pts,ddwPTS,ddwDTS,
+            CODEC_LOGD("dec%d frame->linesize[0]%d,pts %lld,ddwPTS,ddwDTS%lld,%lld, data[0]%x,width%d, height%d \r\n",m_ptPacket->size,m_ptFrame->linesize[0],m_ptFrame->pts,ddwPTS,ddwDTS,
             /*m_ptCodecContext->frame_number,*/m_ptFrame->data[0],m_ptFrame->width, m_ptFrame->height);
 
             if(o_ptAVFrame->linesize[0]>0)

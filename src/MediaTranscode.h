@@ -39,6 +39,8 @@ class MediaTranscode
 public:
 	MediaTranscode();
 	virtual ~MediaTranscode();
+    int SetWaterMarkParam(int i_iEnable,const char * i_strText,const char * i_strFontFile);
+    int DecodeToRGB(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
     int GetDstFrame(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:

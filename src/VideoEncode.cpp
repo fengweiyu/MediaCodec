@@ -109,7 +109,7 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    m_ptCodecContext->gop_size = i_iFrameRate;// 每m_fps_帧插入1个I帧
+    m_ptCodecContext->gop_size = i_iFrameRate*2;// 每m_fps_帧插入1个I帧
     // 帧率
     m_ptCodecContext->framerate = { i_iFrameRate, 1 };/* frames per second */
     // m_ptCodecContext->time_base = {1, i_iFrameRate};
@@ -169,13 +169,14 @@ int VideoEncode::Init(E_CodecType i_eCodecType,int i_iFrameRate,int i_iWidth,int
         av_opt_set(m_ptCodecContext->priv_data, "x265-params", strX265Params, 0);
     }
     /* open it */
+    CODEC_LOGD("avcodec_open2\n");
     if (avcodec_open2(m_ptCodecContext, ptCodec, NULL)<0)
     {//打开解码器
         CODEC_LOGE("avcodec_open2 err %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
         return iRet;
     }
 
-    CODEC_LOGD("avcodec_open %s \r\n",avcodec_get_name((enum AVCodecID)iCodecID));
+    CODEC_LOGI("avcodec_open %s ,gop_size %d i_iFrameRate%d framerate%d\r\n",avcodec_get_name((enum AVCodecID)iCodecID), m_ptCodecContext->gop_size, i_iFrameRate,m_ptCodecContext->framerate.num);
     
     m_ptPacket = av_packet_alloc();
     if(NULL==m_ptPacket)

@@ -24,7 +24,15 @@
 #include <stdint.h>
 
 
-
+#if defined(__EMSCRIPTEN__)
+#define  CODEC_LOGW2(val,fmt,...)      printf(fmt,##__VA_ARGS__)
+#define  CODEC_LOGE2(val,fmt,...)      printf(fmt,##__VA_ARGS__)
+#define  CODEC_LOGD2(val,fmt,...)      printf(fmt,##__VA_ARGS__)
+#define  CODEC_LOGW(...)     printf(__VA_ARGS__)
+#define  CODEC_LOGE(...)     printf(__VA_ARGS__)
+#define  CODEC_LOGD(...)     
+#define  CODEC_LOGI(...)     printf(__VA_ARGS__)
+#else
 #define  CODEC_LOGW2(val,fmt,...)      printf("<%d>:"fmt,val,##__VA_ARGS__)
 #define  CODEC_LOGE2(val,fmt,...)      printf("<%d>:"fmt,val,##__VA_ARGS__)
 #define  CODEC_LOGD2(val,fmt,...)      printf("<%d>:"fmt,val,##__VA_ARGS__)
@@ -32,7 +40,7 @@
 #define  CODEC_LOGE(...)     printf(__VA_ARGS__)
 #define  CODEC_LOGD(...)     printf(__VA_ARGS__)
 #define  CODEC_LOGI(...)     printf(__VA_ARGS__)
-
+#endif
 
 
 

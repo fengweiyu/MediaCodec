@@ -41,13 +41,21 @@ class VideoTransform
 public:
 	VideoTransform();
 	virtual ~VideoTransform();
+    int SetWaterMarkParam(int i_iEnable,const char * i_strText,const char * i_strFontFile);
+    int DecodeToRGB(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
     int Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame);
 private:
+
     AVFrame * m_ptAVFrame;
+    AVFrame * m_ptAVFrameRGBA;
 
 	VideoDecode *m_pVideoDecode;
 	VideoEncode *m_pVideoEncode;
 	VideoRawHandle *m_pVideoRawHandle;
+	
+    int m_iSetWaterMarkFlag;//0 ·ñ £¬1ÊÇ
+	string m_strWaterMarkText;
+	string m_strWaterMarkFontFile;
 };
 
 

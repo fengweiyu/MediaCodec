@@ -69,6 +69,78 @@ MediaTranscode::~MediaTranscode()
 * -----------------------------------------------
 * 2020/01/13      V1.0.0              Yu Weifeng       Created
 ******************************************************************************/
+int MediaTranscode::SetWaterMarkParam(int i_iEnable,const char * i_strText,const char * i_strFontFile)
+{
+    int iRet = -1;
+
+    if(NULL== i_strText || NULL== i_strFontFile)
+    {
+        CODEC_LOGE("NULL== i_strText || NULL== i_strFontFile err \r\n");
+        return iRet;
+    }
+    
+    if(NULL== m_pVideoTransform)
+    {
+        m_pVideoTransform = new VideoTransform();
+        if(NULL==m_pVideoTransform)
+        {
+            CODEC_LOGE("NULL==m_pVideoTransform err \r\n");
+            return iRet;
+        }
+    }
+    iRet=m_pVideoTransform->SetWaterMarkParam(i_iEnable,i_strText,i_strFontFile);
+    return iRet;
+}
+
+/*****************************************************************************
+-Fuction        : DecodeToRGB
+-Description    : 解码输出RGBA数据
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int MediaTranscode::DecodeToRGB(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
+{
+    int iRet = -1;
+
+    if(NULL== i_pSrcFrame || NULL== o_pDstFrame)
+    {
+        CODEC_LOGE("NULL== i_pSrcFrame || NULL== o_pDstFrame err \r\n");
+        return iRet;
+    }
+    
+    if(i_pSrcFrame->eFrameType == CODEC_FRAME_TYPE_AUDIO_FRAME)
+    {
+        CODEC_LOGE("i_pSrcFrame->eFrameType AUDIO err %d\r\n", i_pSrcFrame->eFrameType);
+        return iRet;
+    }
+    
+    if(NULL== m_pVideoTransform)
+    {
+        m_pVideoTransform = new VideoTransform();
+        if(NULL==m_pVideoTransform)
+        {
+            CODEC_LOGE("NULL==m_pVideoTransform err \r\n");
+            return iRet;
+        }
+    }
+    iRet=m_pVideoTransform->DecodeToRGB(i_pSrcFrame,o_pDstFrame);
+    return iRet;
+}
+
+/*****************************************************************************
+-Fuction        : Transform
+-Description    : o_pDstFrame可能输出多帧，由外层解析库解析
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
 int MediaTranscode::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
 {
     int iRet = -1;
@@ -95,7 +167,7 @@ int MediaTranscode::Transform(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFram
         m_pVideoTransform = new VideoTransform();
         if(NULL==m_pVideoTransform)
         {
-            CODEC_LOGE("NULL==m_pVideoDecode err \r\n");
+            CODEC_LOGE("NULL==m_pVideoTransform err \r\n");
             return iRet;
         }
     }

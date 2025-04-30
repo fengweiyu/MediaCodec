@@ -18,6 +18,8 @@ extern "C" {
 #include "libavfilter/buffersink.h"
 #include "libavfilter/buffersrc.h"
 #include "libavutil/opt.h"
+#include "libswscale/swscale.h"
+#include "libavutil/imgutils.h"
 }
 #include <thread>
 #include <mutex>
@@ -47,7 +49,9 @@ public:
 	virtual ~VideoRawHandle();
     int Init(AVCodecContext *i_ptDecodeCtx,const char *i_strFiltersDescr);
     int RawHandle(AVFrame *m_ptAVFrame);
-    
+    int CreateWaterMarkFilter(int i_iWidth, int i_iHeight,const char * i_strText,const char * i_strFontFile,string *o_pstrFilterDescr);
+    int CreateScaleFilter(int i_iDstWidth, int i_iDstHeight,string *o_pstrFilterDescr);
+    int Init(AVCodecContext *i_ptDecodeCtx,string ** i_ppFilterDescrs,int i_iFiltersNum);
 private:
         
     AVFrame     *m_ptFiltFrame;//存储一帧解码后像素（采样）数据

@@ -47,6 +47,38 @@ MediaTranscodeInf::~MediaTranscodeInf()
 }
 
 /*****************************************************************************
+-Fuction        : SetWaterMarkParam
+-Description    : SetWaterMarkParam
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int MediaTranscodeInf::SetWaterMarkParam(int i_iEnable,const char * i_strText,const char * i_strFontFile)
+{
+    MediaTranscode *pMediaTranscode = (MediaTranscode *)m_pHandle;
+    return pMediaTranscode->SetWaterMarkParam(i_iEnable,i_strText,i_strFontFile);
+}
+
+/*****************************************************************************
+-Fuction        : DecodeToRGB
+-Description    : DecodeToRGB
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int MediaTranscodeInf::DecodeToRGB(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
+{
+    MediaTranscode *pMediaTranscode = (MediaTranscode *)m_pHandle;
+    return pMediaTranscode->DecodeToRGB(i_pSrcFrame,o_pDstFrame);
+}
+
+/*****************************************************************************
 -Fuction        : Transform
 -Description    : Transform
 -Input          : 
