@@ -39,6 +39,7 @@ VideoTransform::VideoTransform()
     m_iSetWaterMarkFlag=0;
     m_strWaterMarkText.assign("yuweifeng08016");
     m_strWaterMarkFontFile.assign("msyh.ttf");
+    m_pYUV2RGB = NULL;
 }
 /*****************************************************************************
 -Fuction        : ~VideoTransform
@@ -66,6 +67,11 @@ VideoTransform::~VideoTransform()
     {
         delete m_pVideoEncode;
         m_pVideoEncode = NULL;
+    }
+    if(NULL!= m_pYUV2RGB)
+    {
+        delete m_pYUV2RGB;
+        m_pYUV2RGB = NULL;
     }
     if(NULL!=m_ptAVFrame)
     {
@@ -101,11 +107,99 @@ int VideoTransform::SetWaterMarkParam(int i_iEnable,const char * i_strText,const
         CODEC_LOGE("SetWaterMarkParam NULL err \r\n");
         return -1;
     }
-    CODEC_LOGI("i_iEnable %d i_strText %s i_strFontFile %s\r\n",m_iSetWaterMarkFlag,i_strText,i_strFontFile);
+    CODEC_LOGI("i_iEnable %d i_strText %s i_strFontFile %s\r\n",i_iEnable,i_strText,i_strFontFile);
     m_iSetWaterMarkFlag=1;
     m_strWaterMarkText.assign(i_strText);
     m_strWaterMarkFontFile.assign(i_strFontFile);
     return 0;
+}
+
+/*****************************************************************************
+-Fuction        : DecodeToRGB
+-Description    : //return ResLen,<0 err
+-Input          : 
+-Output         : 
+-Return         : 
+* Modify Date     Version             Author           Modification
+* -----------------------------------------------
+* 2020/01/13      V1.0.0              Yu Weifeng       Created
+******************************************************************************/
+int VideoTransform::DecodeToRGBA(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFrame)
+{
+    int iRet = -1;
+    char strTemp[1024] = { 0 };
+
+    if(NULL==m_ptAVFrame)
+    {
+        CODEC_LOGE("NULL==m_ptAVFrame err \r\n");
+        return iRet;
+    }
+    
+    if(NULL== m_pVideoDecode)
+    {
+        m_pVideoDecode = new VideoDecode();
+        if(NULL==m_pVideoDecode)
+        {
+            CODEC_LOGE("NULL==m_pVideoDecode err \r\n");
+            return iRet;
+        }
+        iRet=m_pVideoDecode->Init(i_pSrcFrame->eEncType);
+    }
+    av_frame_unref(m_ptAVFrame);
+    iRet=m_pVideoDecode->Decode(i_pSrcFrame->pbFrameBuf,i_pSrcFrame->iFrameBufLen,i_pSrcFrame->ddwPTS,i_pSrcFrame->ddwDTS,m_ptAVFrame);
+    if(iRet<0)
+    {
+        CODEC_LOGE("m_pVideoDecode->Decode err \r\n");
+        return iRet;
+    }
+    
+    m_ptAVFrame->pts = m_ptAVFrame->best_effort_timestamp;//当该标志被设置时，FFmpeg会尝试使用最接近的时间戳来表示每个解码帧的时间戳，即尽可能接近原始媒体中的时间戳
+
+    if(NULL== m_pVideoRawHandle)
+    {
+        m_pVideoRawHandle = new VideoRawHandle();
+        if(NULL==m_pVideoRawHandle)
+        {
+            CODEC_LOGE("NULL==m_pVideoRawHandle err \r\n");
+            return iRet;
+        }
+        AVCodecContext *ptCodecContext=NULL;
+        iRet=m_pVideoDecode->GetCodecContext(&ptCodecContext);
+        string strWaterMarkFilter;
+        string strScaleFilter;
+        string * aptFilter[2];
+        int i=0;
+        m_pVideoRawHandle->CreateScaleFilter(o_pDstFrame->dwWidth,o_pDstFrame->dwHeight,&strScaleFilter);
+        aptFilter[i++]=&strScaleFilter;
+        if(m_iSetWaterMarkFlag!=0)
+        {
+            m_pVideoRawHandle->CreateWaterMarkFilter(o_pDstFrame->dwWidth,o_pDstFrame->dwHeight,m_strWaterMarkText.c_str(),m_strWaterMarkFontFile.c_str(),&strWaterMarkFilter);
+            aptFilter[i++]=&strWaterMarkFilter;
+        }
+        iRet=m_pVideoRawHandle->Init(ptCodecContext,aptFilter,i);
+    }
+    iRet=m_pVideoRawHandle->RawHandle(m_ptAVFrame);
+    if(iRet<0)
+    {
+        CODEC_LOGE("m_pVideoRawHandle->RawHandle err \r\n");
+        return iRet;
+    }
+
+
+    
+    if(NULL== m_pYUV2RGB)
+    {
+        m_pYUV2RGB = new YUV2RGB();
+    }
+    iRet=m_pYUV2RGB->YUV420P2RGBA(m_ptAVFrame,o_pDstFrame->pbFrameBuf,o_pDstFrame->iFrameBufMaxLen);
+    if(iRet<0)
+    {
+        CODEC_LOGE("m_pYUV2RGB->YUV420P2RGBA err \r\n");
+        return iRet;
+    }
+
+    o_pDstFrame->iFrameBufLen=iRet;
+    return iRet;
 }
 
 /*****************************************************************************

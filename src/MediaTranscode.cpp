@@ -127,7 +127,7 @@ int MediaTranscode::DecodeToRGB(T_CodecFrame *i_pSrcFrame,T_CodecFrame *o_pDstFr
             return iRet;
         }
     }
-    iRet=m_pVideoTransform->DecodeToRGB(i_pSrcFrame,o_pDstFrame);
+    iRet=m_pVideoTransform->DecodeToRGBA(i_pSrcFrame,o_pDstFrame);
     return iRet;
 }
 

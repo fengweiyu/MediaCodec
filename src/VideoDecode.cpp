@@ -146,7 +146,9 @@ int VideoDecode::Init(E_CodecType i_eCodecType)
     {
         m_ptCodecContext->thread_count = 1; // don't use multithreading
     }
-
+    // 设置常规参数，比如：  
+    m_ptCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;  // 或其他支持的软件像素格式  
+    
     //if (ptCodec->capabilities & AV_CODEC_CAP_TRUNCATED) 
     {
         //m_ptCodecContext->flags |= AV_CODEC_FLAG_TRUNCATED;

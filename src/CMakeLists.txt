@@ -33,6 +33,7 @@ SET(src_list
     VideoDecode.cpp
     VideoRawHandle.cpp
     VideoEncode.cpp
+    YUV2RGB.cpp
 	)		
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include
