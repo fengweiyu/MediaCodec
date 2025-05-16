@@ -26,6 +26,7 @@ file(GLOB src_list
     src/VideoDecode.cpp
     src/VideoRawHandle.cpp
     src/VideoEncode.cpp
+    src/YUV2RGB.cpp
     )  # 可以根据你的目录结构调整 
 
 #set(src_list
