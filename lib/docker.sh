@@ -4,7 +4,17 @@
 docker ps 
 docker images
 docker run -it 4f8243b3b9e9 /bin/bash
-docker run -v D:\code\ThirdSources\MediaCodec\MediaCodec\lib\ff:/ff -it 4f8243b3b9e9 /bin/bash
+docker run -v D:\code\ThirdSources\MediaCodec\MediaCodec\lib\ff:/ff -it 50407bba74f0 /bin/bash
+
+
+
+docker run --rm -it -v D:\code\202311MyEye_SDK\XProtocolN:/home -v C:\Users\Admin\.ssh:/root/.ssh --privileged 50407bba74f0 /bin/bash
+
+cd /home/ && mkdir -p build && cd build && emcmake cmake ..  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_static -DTARGET_OS=WASM  && make -j6 && make install
+
+
+docker run --rm -it -v D:\code\202311MyEye_SDK\XProtocolN:/home -v C:\Users\Admin\.ssh:/root/.ssh --privileged 50407bba74f0 bash -c "chmod 600 /root/.ssh/* && source /emsdk/emsdk_env.sh && cd /home/ && mkdir -p build && cd build && emcmake cmake ..  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_static -DTARGET_OS=WASM  && make -j6 && make install"
+
 
 docker cp D:\code\ThirdSources\MediaCodec\MediaCodec\lib\ff 19dcdc790911:/tmp
 docker stop 19dcdc790911
